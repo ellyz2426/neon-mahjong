@@ -4,7 +4,8 @@
   <text name="level-display" fontSize="12" color="#ffaa00" textAlign="center">Level 1 - 0 XP</text>
   <container flexDirection="column" gap="6" width="100%">
     <text name="btn-play" fontSize="18" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="10" borderWidth="1" borderColor="#00ffff" borderRadius="4">PLAY</text>
-    <text name="btn-resume" fontSize="16" color="#00ff88" textAlign="center" backgroundColor="#001a0d" padding="8" borderWidth="1" borderColor="#00ff88" borderRadius="4">RESUME GAME</text>
+    <text name="btn-quick" fontSize="16" color="#00ff88" textAlign="center" backgroundColor="#001a0d" padding="8" borderWidth="1" borderColor="#00ff88" borderRadius="4">QUICK PLAY</text>
+    <text name="btn-resume" fontSize="16" color="#ffaa00" textAlign="center" backgroundColor="#1a1100" padding="8" borderWidth="1" borderColor="#ffaa00" borderRadius="4">RESUME GAME</text>
     <text name="btn-leaderboard" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#002233" padding="8" borderWidth="1" borderColor="#0088aa" borderRadius="4">LEADERBOARD</text>
     <text name="btn-achievements" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#002233" padding="8" borderWidth="1" borderColor="#0088aa" borderRadius="4">ACHIEVEMENTS</text>
     <text name="btn-stats" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#002233" padding="8" borderWidth="1" borderColor="#0088aa" borderRadius="4">STATS</text>

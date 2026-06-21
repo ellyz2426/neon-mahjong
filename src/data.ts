@@ -700,6 +700,45 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'total2000', name: 'Tile Legend', desc: '2000 total matches' },
   { id: 'score50k', name: 'Score Titan', desc: 'Score 50000 in one game' },
   { id: 'all_themes_used', name: 'Style Icon', desc: 'Play with all 8 themes' },
+  // Power-up achievements
+  { id: 'first_powerup', name: 'Powered Up', desc: 'Use your first power-up' },
+  { id: 'freeze_used', name: 'Ice Age', desc: 'Use Freeze power-up' },
+  { id: 'double_used', name: 'Double Down', desc: 'Use Double Points power-up' },
+  { id: 'reveal_used', name: 'All Seeing', desc: 'Use Reveal power-up' },
+  { id: 'wildcard_used', name: 'Wild Card', desc: 'Use Wildcard power-up' },
+  { id: 'all_powerups', name: 'Arsenal', desc: 'Use all 4 power-up types' },
+  // Perfection
+  { id: 'perfect_game', name: 'Flawless', desc: 'S-rank: no hints, shuffles, or undo' },
+  { id: 'clear_45', name: 'Blitz', desc: 'Clear board in 45 seconds' },
+  // Volume milestones
+  { id: 'score100k', name: 'Score Overlord', desc: 'Score 100000 in one game' },
+  { id: 'total5000', name: 'Tile Sage', desc: '5000 total matches' },
+  { id: 'win100', name: 'Eternal Champion', desc: 'Win 100 games' },
+  // Quick play
+  { id: 'quick_play', name: 'Lucky Draw', desc: 'Use Quick Play' },
+  // Match speed
+  { id: 'match3_fast', name: 'Triple Tap', desc: '3 matches in 5 seconds' },
+  { id: 'powerup3_game', name: 'Power Surge', desc: 'Use 3 power-ups in one game' },
+  { id: 'combo_master_classic', name: 'Combo Purist', desc: 'x10 combo in Classic mode' },
+];
+
+// ── Power-ups ───────────────────────────────────────────────
+export type PowerUpType = 'freeze' | 'double' | 'reveal' | 'wildcard';
+
+export interface PowerUpDef {
+  id: PowerUpType;
+  name: string;
+  description: string;
+  comboThreshold: number;  // combo level needed to earn
+  duration: number;        // seconds (0 = instant/single-use)
+  key: string;             // keyboard shortcut
+}
+
+export const POWERUPS: PowerUpDef[] = [
+  { id: 'freeze', name: 'Freeze', description: 'Stop timer 15s', comboThreshold: 3, duration: 15, key: '1' },
+  { id: 'double', name: '2x Points', description: 'Double score 30s', comboThreshold: 5, duration: 30, key: '2' },
+  { id: 'reveal', name: 'Reveal', description: 'Show pairs 5s', comboThreshold: 7, duration: 5, key: '3' },
+  { id: 'wildcard', name: 'Wildcard', description: 'Match any pair', comboThreshold: 10, duration: 0, key: '4' },
 ];
 
 // ── Grade Calculation ───────────────────────────────────────

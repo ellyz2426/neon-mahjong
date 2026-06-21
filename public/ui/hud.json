@@ -130,6 +130,93 @@
           "color": "#00ffff44"
         },
         "dataUid": "uid-11"
+      },
+      {
+        "sourceTag": "container",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "[1]Freeze"
+            ],
+            "properties": {
+              "name": "hud-pu0",
+              "fontsize": "10",
+              "color": "#00888888",
+              "backgroundcolor": "#001a1a",
+              "padding": "2",
+              "borderradius": "2"
+            },
+            "dataUid": "uid-13"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "[2]2xPts"
+            ],
+            "properties": {
+              "name": "hud-pu1",
+              "fontsize": "10",
+              "color": "#00888888",
+              "backgroundcolor": "#001a1a",
+              "padding": "2",
+              "borderradius": "2"
+            },
+            "dataUid": "uid-14"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "[3]Reveal"
+            ],
+            "properties": {
+              "name": "hud-pu2",
+              "fontsize": "10",
+              "color": "#00888888",
+              "backgroundcolor": "#001a1a",
+              "padding": "2",
+              "borderradius": "2"
+            },
+            "dataUid": "uid-15"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "[4]Wild"
+            ],
+            "properties": {
+              "name": "hud-pu3",
+              "fontsize": "10",
+              "color": "#00888888",
+              "backgroundcolor": "#001a1a",
+              "padding": "2",
+              "borderradius": "2"
+            },
+            "dataUid": "uid-16"
+          }
+        ],
+        "properties": {
+          "flexdirection": "row",
+          "gap": "4",
+          "justifycontent": "space-between"
+        },
+        "dataUid": "uid-12"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [],
+        "properties": {
+          "name": "hud-powerup-status",
+          "fontsize": "10",
+          "color": "#ffaa00"
+        },
+        "dataUid": "uid-17"
       }
     ],
     "properties": {
@@ -141,7 +228,7 @@
       "borderwidth": "1",
       "bordercolor": "#00ffff66",
       "borderradius": "6",
-      "width": "280"
+      "width": "300"
     },
     "dataUid": "uid-1"
   },
@@ -153,7 +240,7 @@
         "column": 0
       },
       "end": {
-        "line": 14,
+        "line": 21,
         "column": 12
       }
     },
@@ -255,6 +342,66 @@
       "end": {
         "line": 13,
         "column": 73
+      }
+    },
+    "uid-12": {
+      "start": {
+        "line": 14,
+        "column": 2
+      },
+      "end": {
+        "line": 19,
+        "column": 14
+      }
+    },
+    "uid-13": {
+      "start": {
+        "line": 15,
+        "column": 4
+      },
+      "end": {
+        "line": 15,
+        "column": 128
+      }
+    },
+    "uid-14": {
+      "start": {
+        "line": 16,
+        "column": 4
+      },
+      "end": {
+        "line": 16,
+        "column": 127
+      }
+    },
+    "uid-15": {
+      "start": {
+        "line": 17,
+        "column": 4
+      },
+      "end": {
+        "line": 17,
+        "column": 128
+      }
+    },
+    "uid-16": {
+      "start": {
+        "line": 18,
+        "column": 4
+      },
+      "end": {
+        "line": 18,
+        "column": 126
+      }
+    },
+    "uid-17": {
+      "start": {
+        "line": 20,
+        "column": 2
+      },
+      "end": {
+        "line": 20,
+        "column": 71
       }
     }
   }

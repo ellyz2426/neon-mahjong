@@ -16,7 +16,7 @@ import { TileRenderer } from '../renderer';
 import {
   TILE_TYPES, THEMES, LAYOUTS, GAME_MODES,
   ACHIEVEMENTS, CHALLENGES, DIFFICULTIES, type GameMode, type Difficulty,
-  calculateGrade,
+  calculateGrade, POWERUPS, type PowerUpType,
 } from '../data';
 
 function setText(doc: UIKitDocument | undefined | null, id: string, text: string): void {
@@ -181,6 +181,31 @@ export class UISystem extends createSystem({
     this._gameSystem.setAutoCompleteReadyCallback(() => {
       this.showToast('Auto-complete ready! Press A');
     });
+
+    // Power-up UI callbacks
+    this._gameSystem.setPowerUpCallbacks(
+      (type) => {
+        const def = POWERUPS.find(p => p.id === type);
+        if (def) this.showToast(`Power-up earned: ${def.name}! [${def.key}]`);
+        this.updatePowerUpHUD();
+      },
+      (type) => {
+        const def = POWERUPS.find(p => p.id === type);
+        if (def) {
+          if (type === 'wildcard') {
+            this.showToast(`${def.name} ACTIVE! Match any pair`);
+          } else {
+            this.showToast(`${def.name} ACTIVE for ${def.duration}s!`);
+          }
+        }
+        this.updatePowerUpHUD();
+      },
+      (type) => {
+        const def = POWERUPS.find(p => p.id === type);
+        if (def) this.showToast(`${def.name} expired`);
+        this.updatePowerUpHUD();
+      },
+    );
   }
 
   // ── Panel Binding ─────────────────────────────────────────
@@ -268,6 +293,10 @@ export class UISystem extends createSystem({
     this.addClick(doc, 'btn-play', () => {
       this._audio.playClick();
       this._gameSystem.goTo('modeselect');
+    });
+    this.addClick(doc, 'btn-quick', () => {
+      this._audio.playClick();
+      this._gameSystem.quickPlay();
     });
     this.addClick(doc, 'btn-resume', () => {
       this._audio.playClick();
@@ -644,6 +673,45 @@ export class UISystem extends createSystem({
     }
     setText(this.hudDoc, 'hud-mode', b.challengeId ? 'Challenge' : modeDef.name);
     setText(this.hudDoc, 'hud-layout', LAYOUTS[b.layoutIdx].name);
+    this.updatePowerUpHUD();
+  }
+
+  private updatePowerUpHUD(): void {
+    if (!this.hudDoc || !this._state.board) return;
+    const b = this._state.board;
+
+    const puNames: PowerUpType[] = ['freeze', 'double', 'reveal', 'wildcard'];
+    const puLabels = ['[1]Freeze', '[2]2xPts', '[3]Reveal', '[4]Wild'];
+
+    for (let i = 0; i < puNames.length; i++) {
+      const type = puNames[i];
+      const count = b.powerups.get(type) || 0;
+      const activeTime = b.activePowerups.get(type) || 0;
+      const isWildcard = type === 'wildcard' && b.wildcardActive;
+
+      let label = puLabels[i];
+      let color = '#00888888'; // dim
+
+      if (activeTime > 0) {
+        label = `${puLabels[i]} ${Math.ceil(activeTime)}s`;
+        color = '#00ff88';
+      } else if (isWildcard) {
+        label = `${puLabels[i]} GO!`;
+        color = '#ffaa00';
+      } else if (count > 0) {
+        label = `${puLabels[i]} READY`;
+        color = '#00ffff';
+      }
+      setText(this.hudDoc, `hud-pu${i}`, label);
+    }
+
+    // Active power-up status line
+    const activeNames: string[] = [];
+    if (b.freezeActive) activeNames.push('FREEZE');
+    if (b.doublePointsActive) activeNames.push('2x POINTS');
+    if (b.revealActive) activeNames.push('REVEAL');
+    if (b.wildcardActive) activeNames.push('WILDCARD');
+    setText(this.hudDoc, 'hud-powerup-status', activeNames.length > 0 ? activeNames.join(' | ') : '');
   }
 
   private updateGameOver(): void {
@@ -746,6 +814,7 @@ export class UISystem extends createSystem({
     setText(this.statsDoc, 'stat-10', `Hard Wins: ${s.hardWins}`);
     setText(this.statsDoc, 'stat-11', `Play Time: ${Math.round(s.playTimeMinutes)} min`);
     setText(this.statsDoc, 'stat-12', `Win Rate: ${winRate}%`);
+    setText(this.statsDoc, 'stat-13', `Power-ups Used: ${s.totalPowerupsUsed}`);
   }
 
   private updateSettings(): void {

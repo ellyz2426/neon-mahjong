@@ -5,6 +5,7 @@ import {
   type GameMode, GAME_MODES, LAYOUTS, ACHIEVEMENTS, CHALLENGES,
   type ThemeDef, THEMES, generateTileSet, type ChallengeDef,
   type Difficulty, DIFFICULTIES, calculateGrade, type GradeResult,
+  type PowerUpType, POWERUPS,
 } from './data';
 
 // ── Tile Instance ───────────────────────────────────────────
@@ -44,6 +45,8 @@ export interface PlayerStats {
   hardWins: number;
   perModeStats: Map<string, { played: number; won: number; bestScore: number }>;
   perLayoutStats: Map<string, { played: number; won: number }>;
+  powerupsUsed: Set<string>;
+  totalPowerupsUsed: number;
 }
 
 // ── Board State ─────────────────────────────────────────────
@@ -69,6 +72,15 @@ export interface BoardState {
   autoCompleted: boolean;
   difficulty: Difficulty;
   resumed: boolean;
+  // Power-ups
+  powerups: Map<PowerUpType, number>; // available count per type
+  activePowerups: Map<PowerUpType, number>; // remaining duration (0 = expired)
+  wildcardActive: boolean;
+  powerupsUsedThisGame: number;
+  doublePointsActive: boolean;
+  freezeActive: boolean;
+  revealActive: boolean;
+  matchTimestamps: number[]; // for fast match detection
 }
 
 // ── Seeded random for daily puzzles ─────────────────────────
@@ -108,6 +120,10 @@ export class GameState {
   onShuffle: (() => void) | null = null;
   onTimerUpdate: ((time: number) => void) | null = null;
   onAutoComplete: (() => void) | null = null;
+  onPowerUpEarned: ((type: PowerUpType) => void) | null = null;
+  onPowerUpActivated: ((type: PowerUpType) => void) | null = null;
+  onPowerUpExpired: ((type: PowerUpType) => void) | null = null;
+  onRevealPairs: ((pairs: [number, number][]) => void) | null = null;
 
   private lastMatchTime = 0;
   private comboTimeout = 3000; // ms
@@ -135,6 +151,8 @@ export class GameState {
           hardWins: d.hardWins || 0,
           perModeStats: new Map(Object.entries(d.perModeStats || {})),
           perLayoutStats: new Map(Object.entries(d.perLayoutStats || {})),
+          powerupsUsed: new Set(d.powerupsUsed || []),
+          totalPowerupsUsed: d.totalPowerupsUsed || 0,
         };
       }
     } catch { /* ignore */ }
@@ -149,6 +167,8 @@ export class GameState {
       hardWins: 0,
       perModeStats: new Map(),
       perLayoutStats: new Map(),
+      powerupsUsed: new Set(),
+      totalPowerupsUsed: 0,
     };
   }
 
@@ -163,6 +183,7 @@ export class GameState {
         challengesCompleted: [...this.stats.challengesCompleted],
         perModeStats: Object.fromEntries(this.stats.perModeStats),
         perLayoutStats: Object.fromEntries(this.stats.perLayoutStats),
+        powerupsUsed: [...this.stats.powerupsUsed],
       };
       localStorage.setItem('neon-mahjong-stats', JSON.stringify(d));
     } catch { /* ignore */ }
@@ -235,6 +256,14 @@ export class GameState {
       autoCompleted: false,
       difficulty,
       resumed,
+      powerups: new Map(),
+      activePowerups: new Map(),
+      wildcardActive: false,
+      powerupsUsedThisGame: 0,
+      doublePointsActive: false,
+      freezeActive: false,
+      revealActive: false,
+      matchTimestamps: [],
     };
 
     this.lastMatchTime = 0;
@@ -287,6 +316,8 @@ export class GameState {
   // ── Matching ──────────────────────────────────────────────
   canMatch(a: TileInstance, b: TileInstance): boolean {
     if (a.idx === b.idx || a.removed || b.removed) return false;
+    // Wildcard: any two free tiles match
+    if (this.board?.wildcardActive) return true;
     const typeA = TILE_TYPES[a.typeId];
     const typeB = TILE_TYPES[b.typeId];
     return typeA.matchGroup === typeB.matchGroup;
@@ -359,10 +390,27 @@ export class GameState {
     const comboBonus = this.board.combo;
     const speedBonus = this.board.mode === 'speed' ? 2 : 1;
     const diffMod = DIFFICULTIES.find(d => d.id === this.board!.difficulty)?.scoreMod ?? 1;
-    const points = Math.round(baseScore * comboBonus * speedBonus * diffMod);
+    const doubleMod = this.board.doublePointsActive ? 2 : 1;
+    const points = Math.round(baseScore * comboBonus * speedBonus * diffMod * doubleMod);
     this.board.score += points;
     this.board.matchCount++;
     this.board.undoStack.push([a.idx, b.idx]);
+
+    // Track match timestamps for fast-match achievement
+    this.board.matchTimestamps.push(this.board.elapsedTime);
+    if (this.board.matchTimestamps.length > 5) this.board.matchTimestamps.shift();
+    // Check 3 matches in 5 seconds
+    if (this.board.matchTimestamps.length >= 3) {
+      const oldest = this.board.matchTimestamps[this.board.matchTimestamps.length - 3];
+      if (this.board.elapsedTime - oldest <= 5) {
+        this.checkAchievement('match3_fast', true);
+      }
+    }
+
+    // Consume wildcard after use
+    if (this.board.wildcardActive) {
+      this.board.wildcardActive = false;
+    }
 
     // Score popup achievement
     if (points >= 1000) {
@@ -375,6 +423,17 @@ export class GameState {
 
     this.onMatch?.(a, b, points);
     if (this.board.combo > 1) this.onCombo?.(this.board.combo);
+
+    // Award power-ups at combo thresholds
+    for (const pu of POWERUPS) {
+      if (this.board.combo >= pu.comboThreshold) {
+        const current = this.board.powerups.get(pu.id) || 0;
+        if (current === 0 && !this.board.activePowerups.has(pu.id)) {
+          this.board.powerups.set(pu.id, 1);
+          this.onPowerUpEarned?.(pu.id);
+        }
+      }
+    }
 
     // Speed mode: add time
     if (this.board.mode === 'speed') {
@@ -494,6 +553,7 @@ export class GameState {
     this.checkAchievement('score20k', this.board.score >= 20000);
     this.checkAchievement('score50k', this.board.score >= 50000);
     this.checkAchievement('total2000', this.stats.totalMatches >= 2000);
+    this.checkAchievement('total5000', this.stats.totalMatches >= 5000);
   }
 
   private winGame(): void {
@@ -539,6 +599,20 @@ export class GameState {
     this.checkAchievement('no_undo', this.board.undoStack.length === this.board.matchCount);
     this.checkAchievement('under_60', this.board.elapsedTime < 60);
     this.checkAchievement('score50k', this.board.score >= 50000);
+    this.checkAchievement('clear_45', this.board.elapsedTime < 45);
+    this.checkAchievement('score100k', this.board.score >= 100000);
+    this.checkAchievement('win100', this.stats.gamesWon >= 100);
+
+    // Perfect game: S-rank, no hints, no shuffles, no undo
+    if (gradeResult.grade === 'S' && this.board.hintsUsed === 0 &&
+        this.board.shufflesUsed === 0 && this.board.undoStack.length === this.board.matchCount) {
+      this.checkAchievement('perfect_game', true);
+    }
+
+    // Combo master in classic
+    if (this.board.mode === 'classic' && this.board.bestCombo >= 10) {
+      this.checkAchievement('combo_master_classic', true);
+    }
 
     // XP (grade bonus)
     const gradeBonus = gradeResult.grade === 'S' ? 2 : gradeResult.grade === 'A' ? 1.5 : 1;
@@ -753,6 +827,9 @@ export class GameState {
 
     this.board.elapsedTime += dt;
 
+    // Tick power-ups
+    this.tickPowerUps(dt);
+
     // Track total play time (in minutes)
     this.stats.playTimeMinutes += dt / 60;
     this.checkAchievement('playtime30', this.stats.playTimeMinutes >= 30);
@@ -765,7 +842,7 @@ export class GameState {
 
     const modeDef = GAME_MODES.find(m => m.id === this.board!.mode)!;
     const hasTimeLimit = modeDef.timeLimit > 0 || (this.board.challengeId && this.board.timeRemaining > 0);
-    if (hasTimeLimit) {
+    if (hasTimeLimit && !this.board.freezeActive) {
       this.board.timeRemaining -= dt;
       if (this.board.timeRemaining <= 0) {
         this.board.timeRemaining = 0;
@@ -853,6 +930,14 @@ export class GameState {
         autoCompleted: false,
         difficulty: save.difficulty || 'normal',
         resumed: true,
+        powerups: new Map(),
+        activePowerups: new Map(),
+        wildcardActive: false,
+        powerupsUsedThisGame: 0,
+        doublePointsActive: false,
+        freezeActive: false,
+        revealActive: false,
+        matchTimestamps: [],
       };
 
       this.currentLayoutIdx = save.layoutIdx;
@@ -885,6 +970,100 @@ export class GameState {
 
   trackZoomUsed(): void {
     this.checkAchievement('zoom_user', true);
+    this.saveStats();
+  }
+
+  // ── Power-ups ──────────────────────────────────────────────
+  activatePowerUp(type: PowerUpType): boolean {
+    if (!this.board || this.board.gameOver || this.board.paused) return false;
+    const count = this.board.powerups.get(type) || 0;
+    if (count <= 0) return false;
+
+    const def = POWERUPS.find(p => p.id === type);
+    if (!def) return false;
+
+    this.board.powerups.set(type, count - 1);
+    this.board.powerupsUsedThisGame++;
+    this.stats.totalPowerupsUsed++;
+    this.stats.powerupsUsed.add(type);
+
+    // Achievement checks
+    this.checkAchievement('first_powerup', true);
+    this.checkAchievement('freeze_used', type === 'freeze');
+    this.checkAchievement('double_used', type === 'double');
+    this.checkAchievement('reveal_used', type === 'reveal');
+    this.checkAchievement('wildcard_used', type === 'wildcard');
+    this.checkAchievement('all_powerups', this.stats.powerupsUsed.size >= 4);
+    this.checkAchievement('powerup3_game', this.board.powerupsUsedThisGame >= 3);
+
+    if (type === 'wildcard') {
+      this.board.wildcardActive = true;
+    } else {
+      this.board.activePowerups.set(type, def.duration);
+      if (type === 'freeze') this.board.freezeActive = true;
+      if (type === 'double') this.board.doublePointsActive = true;
+      if (type === 'reveal') {
+        this.board.revealActive = true;
+        // Find and emit all matching pairs
+        const pairs = this.findAllMatchingPairs();
+        this.onRevealPairs?.(pairs);
+      }
+    }
+
+    this.onPowerUpActivated?.(type);
+    this.saveStats();
+    return true;
+  }
+
+  findAllMatchingPairs(): [number, number][] {
+    if (!this.board) return [];
+    const free = this.getFreeTiles();
+    const pairs: [number, number][] = [];
+    const used = new Set<number>();
+    for (let i = 0; i < free.length; i++) {
+      for (let j = i + 1; j < free.length; j++) {
+        const a = free[i], b = free[j];
+        if (!used.has(a.idx) && !used.has(b.idx)) {
+          const typeA = TILE_TYPES[a.typeId];
+          const typeB = TILE_TYPES[b.typeId];
+          if (typeA.matchGroup === typeB.matchGroup) {
+            pairs.push([a.idx, b.idx]);
+            used.add(a.idx);
+            used.add(b.idx);
+          }
+        }
+      }
+    }
+    return pairs;
+  }
+
+  tickPowerUps(dt: number): void {
+    if (!this.board) return;
+    for (const [type, remaining] of this.board.activePowerups) {
+      const newRemaining = remaining - dt;
+      if (newRemaining <= 0) {
+        this.board.activePowerups.delete(type);
+        if (type === 'freeze') this.board.freezeActive = false;
+        if (type === 'double') this.board.doublePointsActive = false;
+        if (type === 'reveal') this.board.revealActive = false;
+        this.onPowerUpExpired?.(type);
+      } else {
+        this.board.activePowerups.set(type, newRemaining);
+      }
+    }
+  }
+
+  getPowerUpCount(type: PowerUpType): number {
+    return this.board?.powerups.get(type) || 0;
+  }
+
+  getActivePowerUpTime(type: PowerUpType): number {
+    return this.board?.activePowerups.get(type) || 0;
+  }
+
+  // ── Quick Play ────────────────────────────────────────────
+  trackQuickPlay(): void {
+    this.checkAchievement('quick_play', true);
     this.saveStats();
   }
 

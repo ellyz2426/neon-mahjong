@@ -14,6 +14,7 @@
     <text name="stat-10" fontSize="13" color="#ffaa00">Hard Wins: 0</text>
     <text name="stat-11" fontSize="13" color="#00ffff88">Play Time: 0 min</text>
     <text name="stat-12" fontSize="13" color="#00ffff88">Win Rate: 0%</text>
+    <text name="stat-13" fontSize="13" color="#00ff88">Power-ups Used: 0</text>
   </container>
   <text name="btn-stats-back" fontSize="14" color="#888888" textAlign="center" padding="4">BACK</text>
 </container>

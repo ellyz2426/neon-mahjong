@@ -10,7 +10,7 @@ import { TileRenderer } from '../renderer';
 import { AudioManager } from '../audio';
 import { ParticleSystem } from '../particles';
 import { ScorePopupSystem } from '../score-popup';
-import { LAYOUTS, GAME_MODES, CHALLENGES, type GameMode, type ChallengeDef, type Difficulty } from '../data';
+import { LAYOUTS, GAME_MODES, CHALLENGES, type GameMode, type ChallengeDef, type Difficulty, POWERUPS, type PowerUpType } from '../data';
 
 export type GameScreen = 'title' | 'modeselect' | 'layoutselect' | 'countdown'
   | 'playing' | 'pause' | 'gameover' | 'achievements' | 'stats'
@@ -48,6 +48,11 @@ export class GameSystem extends createSystem({}) {
   // Auto-complete
   private autoCompleteAvailable = false;
   private onAutoCompleteReady: (() => void) | null = null;
+  
+  // Power-up callbacks
+  private onPowerUpEarnedCb: ((type: PowerUpType) => void) | null = null;
+  private onPowerUpActivatedCb: ((type: PowerUpType) => void) | null = null;
+  private onPowerUpExpiredCb: ((type: PowerUpType) => void) | null = null;
 
   setRefs(refs: {
     state: GameState;
@@ -64,6 +69,8 @@ export class GameSystem extends createSystem({}) {
 
     // Wire state callbacks
     this._state.onMatch = (a, b, score) => {
+      // Show match line before removing tiles
+      this._renderer.showMatchLine(a.idx, b.idx);
       this._renderer.removeTile(a.idx);
       this._renderer.removeTile(b.idx);
       this._audio.playMatch();
@@ -128,6 +135,33 @@ export class GameSystem extends createSystem({}) {
     this._state.onAutoComplete = () => {
       this.autoCompleteAvailable = true;
       this.onAutoCompleteReady?.();
+    };
+
+    // Power-up callbacks
+    this._state.onPowerUpEarned = (type) => {
+      this._audio.playAchievement();
+      this.onPowerUpEarnedCb?.(type);
+    };
+    this._state.onPowerUpActivated = (type) => {
+      this._audio.playHint();
+      this.onPowerUpActivatedCb?.(type);
+    };
+    this._state.onPowerUpExpired = (type) => {
+      this._audio.playDeselect();
+      this.onPowerUpExpiredCb?.(type);
+    };
+    this._state.onRevealPairs = (pairs) => {
+      for (const [a, b] of pairs) {
+        this._renderer.setTileHint(a, true);
+        this._renderer.setTileHint(b, true);
+      }
+      // Clear after 5 seconds
+      setTimeout(() => {
+        for (const [a, b] of pairs) {
+          this._renderer.setTileHint(a, false);
+          this._renderer.setTileHint(b, false);
+        }
+      }, 5000);
     };
 
     // Mouse input for tile selection
@@ -313,6 +347,34 @@ export class GameSystem extends createSystem({}) {
     return this.autoCompleteAvailable;
   }
 
+  // ── Power-ups ─────────────────────────────────────────────
+  activatePowerUp(type: PowerUpType): boolean {
+    return this._state.activatePowerUp(type);
+  }
+
+  setPowerUpCallbacks(
+    onEarned: (type: PowerUpType) => void,
+    onActivated: (type: PowerUpType) => void,
+    onExpired: (type: PowerUpType) => void,
+  ): void {
+    this.onPowerUpEarnedCb = onEarned;
+    this.onPowerUpActivatedCb = onActivated;
+    this.onPowerUpExpiredCb = onExpired;
+  }
+
+  // ── Quick Play ────────────────────────────────────────────
+  quickPlay(): void {
+    const modes: GameMode[] = ['classic', 'timed', 'zen', 'speed'];
+    const mode = modes[Math.floor(Math.random() * modes.length)];
+    const layoutIdx = Math.floor(Math.random() * LAYOUTS.length);
+    this.pendingMode = mode;
+    this.pendingLayout = layoutIdx;
+    this.pendingChallengeId = null;
+    this._state.currentDifficulty = 'normal';
+    this._state.trackQuickPlay();
+    this.beginCountdown();
+  }
+
   // ── Input ─────────────────────────────────────────────────
   private handleKeyDown(key: string): void {
     if (this._screen === 'playing') {
@@ -335,6 +397,14 @@ export class GameSystem extends createSystem({}) {
         this._renderer.zoomOut();
       } else if (key === '0') {
         this._renderer.resetZoom();
+      } else if (key === '1') {
+        this.activatePowerUp('freeze');
+      } else if (key === '2') {
+        this.activatePowerUp('double');
+      } else if (key === '3') {
+        this.activatePowerUp('reveal');
+      } else if (key === '4') {
+        this.activatePowerUp('wildcard');
       }
     } else if (this._screen === 'pause') {
       if (key === 'escape' || key === 'p') {

@@ -1,4 +1,4 @@
-<container name="hud-panel" flexDirection="column" gap="4" padding="10" backgroundColor="#000a1599" borderWidth="1" borderColor="#00ffff66" borderRadius="6" width="280">
+<container name="hud-panel" flexDirection="column" gap="4" padding="10" backgroundColor="#000a1599" borderWidth="1" borderColor="#00ffff66" borderRadius="6" width="300">
   <container flexDirection="row" gap="8" justifyContent="space-between">
     <text name="hud-score" fontSize="16" fontWeight="bold" color="#00ffff">Score: 0</text>
     <text name="hud-combo" fontSize="14" color="#ffaa00">x1</text>
@@ -12,4 +12,11 @@
     <text name="hud-mode" fontSize="12" color="#00ffff88">Classic</text>
   </container>
   <text name="hud-layout" fontSize="11" color="#00ffff44">Fortress</text>
+  <container flexDirection="row" gap="4" justifyContent="space-between">
+    <text name="hud-pu0" fontSize="10" color="#00888888" backgroundColor="#001a1a" padding="2" borderRadius="2">[1]Freeze</text>
+    <text name="hud-pu1" fontSize="10" color="#00888888" backgroundColor="#001a1a" padding="2" borderRadius="2">[2]2xPts</text>
+    <text name="hud-pu2" fontSize="10" color="#00888888" backgroundColor="#001a1a" padding="2" borderRadius="2">[3]Reveal</text>
+    <text name="hud-pu3" fontSize="10" color="#00888888" backgroundColor="#001a1a" padding="2" borderRadius="2">[4]Wild</text>
+  </container>
+  <text name="hud-powerup-status" fontSize="10" color="#ffaa00"></text>
 </container>

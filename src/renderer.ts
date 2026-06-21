@@ -127,6 +127,12 @@ export class TileRenderer {
   // Board idle animation
   private boardTime = 0;
 
+  // Ambient background particles
+  private ambientParticles: { mesh: Mesh; velocity: Vector3; baseY: number }[] = [];
+
+  // Match line effect
+  private matchLines: { line: Line; life: number; maxLife: number }[] = [];
+
   constructor(world: World, state: GameState) {
     this.world = world;
     this.state = state;
@@ -168,6 +174,9 @@ export class TileRenderer {
     // Board group
     this.boardGroup.position.set(0, 0.8, -1.5);
     scene.add(this.boardGroup);
+
+    // Ambient background particles
+    this.createAmbientParticles();
   }
 
   private setupZoom(): void {
@@ -582,6 +591,65 @@ export class TileRenderer {
     this.updateFreeTileSet();
   }
 
+  // ── Ambient Background Particles ────────────────────────────
+  private createAmbientParticles(): void {
+    const scene = this.world.scene;
+    const particleGeo = new BoxGeometry(0.015, 0.015, 0.015);
+
+    for (let i = 0; i < 30; i++) {
+      const hue = Math.random();
+      const color = new Color().setHSL(hue * 0.3 + 0.5, 0.8, 0.5); // cyan-purple range
+      const mat = new MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.2 + Math.random() * 0.3,
+        depthWrite: false,
+      });
+      const mesh = new Mesh(particleGeo, mat);
+      mesh.position.set(
+        (Math.random() - 0.5) * 6,
+        Math.random() * 3,
+        -1.5 + (Math.random() - 0.5) * 4,
+      );
+      mesh.scale.setScalar(0.3 + Math.random() * 0.7);
+      scene.add(mesh);
+
+      this.ambientParticles.push({
+        mesh,
+        velocity: new Vector3(
+          (Math.random() - 0.5) * 0.02,
+          0.01 + Math.random() * 0.02,
+          (Math.random() - 0.5) * 0.01,
+        ),
+        baseY: mesh.position.y,
+      });
+    }
+  }
+
+  // ── Match Line Effect ─────────────────────────────────────
+  showMatchLine(idxA: number, idxB: number): void {
+    const posA = this.tilePositions.get(idxA);
+    const posB = this.tilePositions.get(idxB);
+    if (!posA || !posB) return;
+
+    const points = new Float32BufferAttribute([
+      posA.x, posA.y + 0.03, posA.z,
+      posB.x, posB.y + 0.03, posB.z,
+    ], 3);
+    const geo = new BufferGeometry();
+    geo.setAttribute('position', points);
+    const mat = new LineBasicMaterial({
+      color: this.currentTheme.tileEdge,
+      transparent: true,
+      opacity: 0.8,
+      linewidth: 2,
+    });
+    const line = new Line(geo, mat);
+    this.world.scene.add(line);
+
+    this.matchLines.push({ line, life: 0.6, maxLife: 0.6 });
+  }
+
   // ── Per-frame update ──────────────────────────────────────
   updateAnimations(dt: number): void {
     // Entrance animations
@@ -666,6 +734,43 @@ export class TileRenderer {
     this.boardTime += dt;
     const floatY = Math.sin(this.boardTime * 0.5) * 0.005;
     this.boardGroup.position.y = 0.8 + floatY;
+
+    // Ambient particle drift
+    for (const p of this.ambientParticles) {
+      p.mesh.position.x += p.velocity.x * dt;
+      p.mesh.position.y += p.velocity.y * dt;
+      p.mesh.position.z += p.velocity.z * dt;
+      p.mesh.rotation.y += dt * 0.3;
+      p.mesh.rotation.x += dt * 0.2;
+
+      // Wrap particles when they drift too far
+      if (p.mesh.position.y > 4) {
+        p.mesh.position.y = -0.5;
+        p.mesh.position.x = (Math.random() - 0.5) * 6;
+      }
+      if (Math.abs(p.mesh.position.x) > 4) {
+        p.mesh.position.x = -Math.sign(p.mesh.position.x) * 3.5;
+      }
+
+      // Gentle sine-wave horizontal drift
+      const sineOffset = Math.sin(this.boardTime * 0.3 + p.baseY * 2) * 0.002;
+      p.mesh.position.x += sineOffset;
+    }
+
+    // Match line fade
+    for (let i = this.matchLines.length - 1; i >= 0; i--) {
+      const ml = this.matchLines[i];
+      ml.life -= dt;
+      if (ml.life <= 0) {
+        this.world.scene.remove(ml.line);
+        ml.line.geometry.dispose();
+        (ml.line.material as LineBasicMaterial).dispose();
+        this.matchLines.splice(i, 1);
+      } else {
+        const alpha = ml.life / ml.maxLife;
+        (ml.line.material as LineBasicMaterial).opacity = alpha * 0.8;
+      }
+    }
   }
 
   // ── Zoom control ──────────────────────────────────────────
