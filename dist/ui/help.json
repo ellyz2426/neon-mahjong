@@ -63,7 +63,7 @@
             "sourceTag": "text",
             "type": "custom",
             "children": [
-              "Click: Select tile"
+              "Click: Select tile | Hover: Preview tile"
             ],
             "properties": {
               "fontsize": "12",
@@ -87,13 +87,37 @@
             "sourceTag": "text",
             "type": "custom",
             "children": [
-              "A: Auto-complete (when available)"
+              "F: Toggle free tile glow | +/-: Zoom"
             ],
             "properties": {
               "fontsize": "12",
               "color": "#ffffff"
             },
             "dataUid": "uid-9"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "A: Auto-complete | 0: Reset zoom"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-10"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Mouse drag: Rotate board | Scroll: Zoom"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-11"
           },
           {
             "sourceTag": "text",
@@ -106,43 +130,43 @@
               "fontweight": "bold",
               "color": "#ffaa00"
             },
-            "dataUid": "uid-10"
-          },
-          {
-            "sourceTag": "text",
-            "type": "custom",
-            "children": [
-              "Trigger: Select | Thumbstick: Rotate"
-            ],
-            "properties": {
-              "fontsize": "12",
-              "color": "#ffffff"
-            },
-            "dataUid": "uid-11"
-          },
-          {
-            "sourceTag": "text",
-            "type": "custom",
-            "children": [
-              "A: Hint | B: Pause | Left A: Shuffle"
-            ],
-            "properties": {
-              "fontsize": "12",
-              "color": "#ffffff"
-            },
             "dataUid": "uid-12"
           },
           {
             "sourceTag": "text",
             "type": "custom",
             "children": [
-              "Left B: Auto-complete (when available)"
+              "Trigger: Select | R-Thumbstick X: Rotate"
             ],
             "properties": {
               "fontsize": "12",
               "color": "#ffffff"
             },
             "dataUid": "uid-13"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "R-Thumbstick Y: Zoom | A: Hint | B: Pause"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-14"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "L-A: Shuffle | L-B: Auto-complete/Free glow"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-15"
           },
           {
             "sourceTag": "text",
@@ -155,7 +179,7 @@
               "fontweight": "bold",
               "color": "#ffaa00"
             },
-            "dataUid": "uid-14"
+            "dataUid": "uid-16"
           },
           {
             "sourceTag": "text",
@@ -167,7 +191,19 @@
               "fontsize": "12",
               "color": "#ffffff"
             },
-            "dataUid": "uid-15"
+            "dataUid": "uid-17"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Grade: S/A/B/C/D based on score, speed, combos."
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-18"
           },
           {
             "sourceTag": "text",
@@ -180,7 +216,7 @@
               "fontweight": "bold",
               "color": "#ffaa00"
             },
-            "dataUid": "uid-16"
+            "dataUid": "uid-19"
           },
           {
             "sourceTag": "text",
@@ -192,7 +228,7 @@
               "fontsize": "11",
               "color": "#ffffff"
             },
-            "dataUid": "uid-17"
+            "dataUid": "uid-20"
           },
           {
             "sourceTag": "text",
@@ -204,7 +240,7 @@
               "fontsize": "11",
               "color": "#ffffff"
             },
-            "dataUid": "uid-18"
+            "dataUid": "uid-21"
           },
           {
             "sourceTag": "text",
@@ -216,7 +252,7 @@
               "fontsize": "11",
               "color": "#ffffff"
             },
-            "dataUid": "uid-19"
+            "dataUid": "uid-22"
           },
           {
             "sourceTag": "text",
@@ -228,7 +264,7 @@
               "fontsize": "11",
               "color": "#ff4466"
             },
-            "dataUid": "uid-20"
+            "dataUid": "uid-23"
           }
         ],
         "properties": {
@@ -251,7 +287,7 @@
           "textalign": "center",
           "padding": "6"
         },
-        "dataUid": "uid-21"
+        "dataUid": "uid-24"
       }
     ],
     "properties": {
@@ -276,7 +312,7 @@
         "column": 0
       },
       "end": {
-        "line": 22,
+        "line": 25,
         "column": 12
       }
     },
@@ -296,7 +332,7 @@
         "column": 2
       },
       "end": {
-        "line": 20,
+        "line": 23,
         "column": 14
       }
     },
@@ -337,7 +373,7 @@
       },
       "end": {
         "line": 6,
-        "column": 65
+        "column": 87
       }
     },
     "uid-8": {
@@ -357,7 +393,7 @@
       },
       "end": {
         "line": 8,
-        "column": 80
+        "column": 83
       }
     },
     "uid-10": {
@@ -367,7 +403,7 @@
       },
       "end": {
         "line": 9,
-        "column": 76
+        "column": 79
       }
     },
     "uid-11": {
@@ -377,7 +413,7 @@
       },
       "end": {
         "line": 10,
-        "column": 83
+        "column": 86
       }
     },
     "uid-12": {
@@ -387,7 +423,7 @@
       },
       "end": {
         "line": 11,
-        "column": 83
+        "column": 76
       }
     },
     "uid-13": {
@@ -397,7 +433,7 @@
       },
       "end": {
         "line": 12,
-        "column": 85
+        "column": 87
       }
     },
     "uid-14": {
@@ -407,7 +443,7 @@
       },
       "end": {
         "line": 13,
-        "column": 72
+        "column": 88
       }
     },
     "uid-15": {
@@ -417,7 +453,7 @@
       },
       "end": {
         "line": 14,
-        "column": 95
+        "column": 90
       }
     },
     "uid-16": {
@@ -427,7 +463,7 @@
       },
       "end": {
         "line": 15,
-        "column": 70
+        "column": 72
       }
     },
     "uid-17": {
@@ -437,7 +473,7 @@
       },
       "end": {
         "line": 16,
-        "column": 86
+        "column": 95
       }
     },
     "uid-18": {
@@ -447,7 +483,7 @@
       },
       "end": {
         "line": 17,
-        "column": 85
+        "column": 94
       }
     },
     "uid-19": {
@@ -457,7 +493,7 @@
       },
       "end": {
         "line": 18,
-        "column": 89
+        "column": 70
       }
     },
     "uid-20": {
@@ -467,16 +503,46 @@
       },
       "end": {
         "line": 19,
-        "column": 83
+        "column": 86
       }
     },
     "uid-21": {
       "start": {
+        "line": 20,
+        "column": 4
+      },
+      "end": {
+        "line": 20,
+        "column": 85
+      }
+    },
+    "uid-22": {
+      "start": {
         "line": 21,
-        "column": 2
+        "column": 4
       },
       "end": {
         "line": 21,
+        "column": 89
+      }
+    },
+    "uid-23": {
+      "start": {
+        "line": 22,
+        "column": 4
+      },
+      "end": {
+        "line": 22,
+        "column": 83
+      }
+    },
+    "uid-24": {
+      "start": {
+        "line": 24,
+        "column": 2
+      },
+      "end": {
+        "line": 24,
         "column": 101
       }
     }

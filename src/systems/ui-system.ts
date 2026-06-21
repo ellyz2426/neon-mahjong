@@ -16,6 +16,7 @@ import { TileRenderer } from '../renderer';
 import {
   TILE_TYPES, THEMES, LAYOUTS, GAME_MODES,
   ACHIEVEMENTS, CHALLENGES, DIFFICULTIES, type GameMode, type Difficulty,
+  calculateGrade,
 } from '../data';
 
 function setText(doc: UIKitDocument | undefined | null, id: string, text: string): void {
@@ -405,6 +406,12 @@ export class UISystem extends createSystem({
         setTimeout(() => this._gameSystem.triggerAutoComplete(), 100);
       }
     });
+    this.addClick(doc, 'btn-freeglow', () => {
+      this._audio.playClick();
+      const on = this._gameSystem.toggleFreeTileGlow();
+      this._state.trackFreeGlowUsed();
+      this.updatePauseMenu();
+    });
     this.addClick(doc, 'btn-save-quit', () => {
       this._audio.playClick();
       this._gameSystem.saveCurrentGame();
@@ -614,6 +621,8 @@ export class UISystem extends createSystem({
     if (!this.pauseDoc) return;
     const diffDef = DIFFICULTIES.find(d => d.id === (this._state.board?.difficulty || 'normal'));
     setText(this.pauseDoc, 'pause-diff', diffDef ? diffDef.name : 'Normal');
+    const glowOn = this._gameSystem.isFreeTileGlowOn();
+    setText(this.pauseDoc, 'btn-freeglow', glowOn ? 'Free Tiles: ON' : 'Free Tiles: OFF');
   }
 
   updateHUD(): void {
@@ -660,13 +669,27 @@ export class UISystem extends createSystem({
     setText(this.goDoc, 'go-time', `Time: ${this._state.formatTime(b.elapsedTime)}`);
     setText(this.goDoc, 'go-combo', `Best Combo: x${b.bestCombo}`);
     setText(this.goDoc, 'go-hints', `Hints Used: ${b.hintsUsed}`);
-    setText(this.goDoc, 'go-shuffles', `Shuffles: ${b.shufflesUsed}`);
-    const xp = b.won ? Math.floor(b.score / 10) + 50 : 0;
-    setText(this.goDoc, 'go-xp', `+${xp} XP`);
+
+    // Grade display
+    if (b.won) {
+      const grade = this._state.lastGrade;
+      if (grade) {
+        const starStr = '*'.repeat(grade.stars);
+        setText(this.goDoc, 'go-shuffles', `Grade: ${grade.grade} ${starStr} (${grade.efficiency}% eff)`);
+      } else {
+        setText(this.goDoc, 'go-shuffles', `Shuffles: ${b.shufflesUsed}`);
+      }
+      const gradeBonus = (grade?.grade === 'S') ? 2 : (grade?.grade === 'A') ? 1.5 : 1;
+      const xp = Math.floor((b.score / 10 + 50) * gradeBonus);
+      setText(this.goDoc, 'go-xp', `+${xp} XP`);
+    } else {
+      setText(this.goDoc, 'go-shuffles', `Shuffles: ${b.shufflesUsed}`);
+      setText(this.goDoc, 'go-xp', '+0 XP');
+    }
 
     // Win streak info
     if (b.won && this._state.stats.winStreak > 1) {
-      setText(this.goDoc, 'go-shuffles', `Win Streak: ${this._state.stats.winStreak}`);
+      setText(this.goDoc, 'go-hints', `Win Streak: ${this._state.stats.winStreak}`);
     }
   }
 

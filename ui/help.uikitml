@@ -4,15 +4,18 @@
     <text fontSize="14" fontWeight="bold" color="#ffaa00">Goal</text>
     <text fontSize="12" color="#ffffff">Clear all tiles by matching pairs. A tile is free if no tile is on top and at least one side is open.</text>
     <text fontSize="14" fontWeight="bold" color="#ffaa00">Browser Controls</text>
-    <text fontSize="12" color="#ffffff">Click: Select tile</text>
+    <text fontSize="12" color="#ffffff">Click: Select tile | Hover: Preview tile</text>
     <text fontSize="12" color="#ffffff">H: Hint | S: Shuffle | Z: Undo | ESC: Pause</text>
-    <text fontSize="12" color="#ffffff">A: Auto-complete (when available)</text>
+    <text fontSize="12" color="#ffffff">F: Toggle free tile glow | +/-: Zoom</text>
+    <text fontSize="12" color="#ffffff">A: Auto-complete | 0: Reset zoom</text>
+    <text fontSize="12" color="#ffffff">Mouse drag: Rotate board | Scroll: Zoom</text>
     <text fontSize="14" fontWeight="bold" color="#ffaa00">VR Controls</text>
-    <text fontSize="12" color="#ffffff">Trigger: Select | Thumbstick: Rotate</text>
-    <text fontSize="12" color="#ffffff">A: Hint | B: Pause | Left A: Shuffle</text>
-    <text fontSize="12" color="#ffffff">Left B: Auto-complete (when available)</text>
+    <text fontSize="12" color="#ffffff">Trigger: Select | R-Thumbstick X: Rotate</text>
+    <text fontSize="12" color="#ffffff">R-Thumbstick Y: Zoom | A: Hint | B: Pause</text>
+    <text fontSize="12" color="#ffffff">L-A: Shuffle | L-B: Auto-complete/Free glow</text>
     <text fontSize="14" fontWeight="bold" color="#ffaa00">Scoring</text>
     <text fontSize="12" color="#ffffff">100 pts per match. Fast matches build combo x10.</text>
+    <text fontSize="12" color="#ffffff">Grade: S/A/B/C/D based on score, speed, combos.</text>
     <text fontSize="14" fontWeight="bold" color="#ffaa00">Modes</text>
     <text fontSize="11" color="#ffffff">Classic: Clear the board | Timed: 5 min</text>
     <text fontSize="11" color="#ffffff">Zen: No pressure | Daily: Same for all</text>

@@ -4,7 +4,7 @@ import {
   type TileType, TILE_TYPES, type TilePosition,
   type GameMode, GAME_MODES, LAYOUTS, ACHIEVEMENTS, CHALLENGES,
   type ThemeDef, THEMES, generateTileSet, type ChallengeDef,
-  type Difficulty, DIFFICULTIES,
+  type Difficulty, DIFFICULTIES, calculateGrade, type GradeResult,
 } from './data';
 
 // ── Tile Instance ───────────────────────────────────────────
@@ -95,6 +95,7 @@ export class GameState {
   currentThemeIdx = 0;
   currentLayoutIdx = 0;
   currentDifficulty: Difficulty = 'normal';
+  lastGrade: GradeResult | null = null;
 
   // Callbacks
   onMatch: ((a: TileInstance, b: TileInstance, score: number) => void) | null = null;
@@ -491,6 +492,8 @@ export class GameState {
     this.checkAchievement('score5k', this.board.score >= 5000);
     this.checkAchievement('score10k', this.board.score >= 10000);
     this.checkAchievement('score20k', this.board.score >= 20000);
+    this.checkAchievement('score50k', this.board.score >= 50000);
+    this.checkAchievement('total2000', this.stats.totalMatches >= 2000);
   }
 
   private winGame(): void {
@@ -515,8 +518,31 @@ export class GameState {
     this.checkAchievement('streak5', this.stats.winStreak >= 5);
     this.checkAchievement('streak10', this.stats.winStreak >= 10);
 
-    // XP
-    const xpGain = Math.floor(this.board.score / 10) + 50;
+    // Grade calculation
+    const gradeResult = calculateGrade(
+      this.board.score, this.board.elapsedTime,
+      this.board.hintsUsed, this.board.shufflesUsed,
+      this.board.bestCombo, this.board.totalPairs,
+      this.board.matchCount,
+    );
+    this.lastGrade = gradeResult;
+
+    // Grade achievements
+    this.checkAchievement('grade_a', gradeResult.grade === 'S' || gradeResult.grade === 'A');
+    this.checkAchievement('grade_s', gradeResult.grade === 'S');
+    if (gradeResult.grade === 'S') {
+      this.checkAchievement('grade_s_hard', this.board.difficulty === 'hard');
+      this.checkAchievement('grade_s_speed', this.board.mode === 'speed');
+    }
+
+    // New achievements
+    this.checkAchievement('no_undo', this.board.undoStack.length === this.board.matchCount);
+    this.checkAchievement('under_60', this.board.elapsedTime < 60);
+    this.checkAchievement('score50k', this.board.score >= 50000);
+
+    // XP (grade bonus)
+    const gradeBonus = gradeResult.grade === 'S' ? 2 : gradeResult.grade === 'A' ? 1.5 : 1;
+    const xpGain = Math.floor((this.board.score / 10 + 50) * gradeBonus);
     this.stats.xp += xpGain;
     this.stats.level = Math.floor(this.stats.xp / 200) + 1;
 
@@ -732,6 +758,11 @@ export class GameState {
     this.checkAchievement('playtime30', this.stats.playTimeMinutes >= 30);
     this.checkAchievement('playtime120', this.stats.playTimeMinutes >= 120);
 
+    // Zen mode play time achievement
+    if (this.board.mode === 'zen' && this.board.elapsedTime >= 1800) {
+      this.checkAchievement('zen_30min', true);
+    }
+
     const modeDef = GAME_MODES.find(m => m.id === this.board!.mode)!;
     const hasTimeLimit = modeDef.timeLimit > 0 || (this.board.challengeId && this.board.timeRemaining > 0);
     if (hasTimeLimit) {
@@ -842,6 +873,18 @@ export class GameState {
     this.stats.themesUsed.add(themeId);
     this.checkAchievement('theme_change', true);
     this.checkAchievement('all_themes', this.stats.themesUsed.size >= THEMES.length);
+    this.checkAchievement('all_themes_used', this.stats.themesUsed.size >= 8);
+    this.saveStats();
+  }
+
+  // New feature achievement trackers
+  trackFreeGlowUsed(): void {
+    this.checkAchievement('free_glow', true);
+    this.saveStats();
+  }
+
+  trackZoomUsed(): void {
+    this.checkAchievement('zoom_user', true);
     this.saveStats();
   }
 

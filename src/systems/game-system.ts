@@ -1,4 +1,4 @@
-// Neon Mahjong VR - Main Game System (Extended)
+// Neon Mahjong VR - Main Game System (Round 4 - Enhanced)
 
 import {
   createSystem,
@@ -118,6 +118,7 @@ export class GameSystem extends createSystem({}) {
       }
       this._audio.stopMusic();
       this.autoCompleteAvailable = false;
+      this._renderer.setFreeTileGlow(false);
       this._screen = 'gameover';
       this._onScreenChange?.('gameover');
     };
@@ -144,6 +145,14 @@ export class GameSystem extends createSystem({}) {
     });
 
     canvas.addEventListener('mousemove', (e: MouseEvent) => {
+      // Hover effect
+      if (this._screen === 'playing' && !isDragging) {
+        const rect = canvas.getBoundingClientRect();
+        const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        this._renderer.setHovered(ndcX, ndcY, this.world.camera);
+      }
+
       if (!isDragging) return;
       const dx = e.clientX - dragStartX;
       const dy = e.clientY - dragStartY;
@@ -158,7 +167,7 @@ export class GameSystem extends createSystem({}) {
       }
     });
 
-    canvas.addEventListener('mouseup', (e: MouseEvent) => {
+    canvas.addEventListener('mouseup', (_e: MouseEvent) => {
       isDragging = false;
     });
 
@@ -240,7 +249,8 @@ export class GameSystem extends createSystem({}) {
 
   startGame(): void {
     this._state.startGame(this.pendingMode, this.pendingLayout, this.pendingChallengeId, this._state.currentDifficulty);
-    this._renderer.buildBoard();
+    this._renderer.buildBoard(true);
+    this._renderer.resetZoom();
     this._audio.startMusic();
     this.autoCompleteAvailable = false;
     this.goTo('playing');
@@ -248,7 +258,8 @@ export class GameSystem extends createSystem({}) {
 
   resumeGame(): boolean {
     if (!this._state.resumeGame()) return false;
-    this._renderer.buildBoard();
+    this._renderer.buildBoard(true);
+    this._renderer.resetZoom();
     this._audio.startMusic();
     this.autoCompleteAvailable = false;
     this.goTo('playing');
@@ -268,6 +279,18 @@ export class GameSystem extends createSystem({}) {
       this.autoCompleteAvailable = false;
       this._state.autoComplete();
     }
+  }
+
+  toggleFreeTileGlow(): boolean {
+    const on = this._renderer.toggleFreeTileGlow();
+    if (on) {
+      this._audio.playHint();
+    }
+    return on;
+  }
+
+  isFreeTileGlowOn(): boolean {
+    return this._renderer.isFreeTileGlowOn();
   }
 
   getCountdownValue(): number {
@@ -301,9 +324,17 @@ export class GameSystem extends createSystem({}) {
         this.requestShuffle();
       } else if (key === 'z') {
         this._state.undo();
-        this._renderer.buildBoard();
+        this._renderer.buildBoard(false);
       } else if (key === 'a' && this.autoCompleteAvailable) {
         this.triggerAutoComplete();
+      } else if (key === 'f') {
+        this.toggleFreeTileGlow();
+      } else if (key === '+' || key === '=') {
+        this._renderer.zoomIn();
+      } else if (key === '-' || key === '_') {
+        this._renderer.zoomOut();
+      } else if (key === '0') {
+        this._renderer.resetZoom();
       }
     } else if (this._screen === 'pause') {
       if (key === 'escape' || key === 'p') {
@@ -391,6 +422,9 @@ export class GameSystem extends createSystem({}) {
     // Update particles and score popups
     this._particles.update(dt);
     this._scorePopups.update(dt);
+
+    // Update renderer animations (entrance, glow, zoom, idle)
+    this._renderer.updateAnimations(dt);
   }
 
   private handleXRInput(): void {
@@ -414,16 +448,21 @@ export class GameSystem extends createSystem({}) {
       this.inputCooldown = 0.3;
     }
 
-    // Thumbstick = rotate board
+    // Right thumbstick X = rotate board, Y = zoom
     if (this.stickCooldown <= 0) {
       const stick = rightPad.getAxesValues(InputComponent.Thumbstick);
       if (stick) {
-        const { x } = stick;
+        const { x, y } = stick;
         if (Math.abs(x) > 0.5) {
           const boardGroup = this._renderer['boardGroup'];
           if (boardGroup) {
             boardGroup.rotation.y += x > 0 ? 0.3 : -0.3;
           }
+          this.stickCooldown = 0.25;
+        }
+        if (Math.abs(y) > 0.5) {
+          if (y > 0) this._renderer.zoomIn();
+          else this._renderer.zoomOut();
           this.stickCooldown = 0.25;
         }
       }
@@ -437,12 +476,14 @@ export class GameSystem extends createSystem({}) {
         this.requestShuffle();
         this.inputCooldown = 0.3;
       }
-      // Left B = auto-complete (when available)
+      // Left B = toggle free tile glow
       if (leftPad.getButtonDown(InputComponent.B_Button) && this.inputCooldown <= 0) {
         if (this.autoCompleteAvailable) {
           this.triggerAutoComplete();
-          this.inputCooldown = 0.3;
+        } else {
+          this.toggleFreeTileGlow();
         }
+        this.inputCooldown = 0.3;
       }
     }
   }

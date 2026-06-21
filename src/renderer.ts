@@ -1,4 +1,4 @@
-// Neon Mahjong VR - 3D Tile Renderer (Extended)
+// Neon Mahjong VR - 3D Tile Renderer (Round 4 - Enhanced)
 
 import {
   World,
@@ -81,13 +81,23 @@ function createTileTexture(label: string, color: string, suit: string): CanvasTe
   return tex;
 }
 
+// ── Tile entrance animation state ───────────────────────────
+interface TileEntrance {
+  mesh: Mesh;
+  targetY: number;
+  delay: number;
+  elapsed: number;
+  duration: number;
+  done: boolean;
+}
+
 // ── Renderer ────────────────────────────────────────────────
 export class TileRenderer {
   private world: World;
   private state: GameState;
   private boardGroup: Group;
   private tileMeshes: Map<number, Mesh> = new Map();
-  private tilePositions: Map<number, Vector3> = new Map(); // World positions for particles
+  private tilePositions: Map<number, Vector3> = new Map();
   private currentTheme: ThemeDef;
   private raycaster: Raycaster;
   private floorGrid: GridHelper | null = null;
@@ -98,6 +108,25 @@ export class TileRenderer {
   private centerX = 0;
   private centerY = 0;
 
+  // Entrance animation
+  private entranceAnims: TileEntrance[] = [];
+  private entranceActive = false;
+
+  // Hover
+  private hoveredIdx: number | null = null;
+
+  // Free tile highlighting
+  private freeTileGlow = false;
+  private freeTileGlowPhase = 0;
+  private freeTileSet = new Set<number>();
+
+  // Camera zoom
+  private zoomLevel = 1.0;
+  private targetZoom = 1.0;
+
+  // Board idle animation
+  private boardTime = 0;
+
   constructor(world: World, state: GameState) {
     this.world = world;
     this.state = state;
@@ -105,6 +134,7 @@ export class TileRenderer {
     this.currentTheme = THEMES[state.currentThemeIdx];
     this.raycaster = new Raycaster();
     this.setupScene();
+    this.setupZoom();
   }
 
   private setupScene(): void {
@@ -140,9 +170,16 @@ export class TileRenderer {
     scene.add(this.boardGroup);
   }
 
+  private setupZoom(): void {
+    const canvas = this.world.renderer.domElement;
+    canvas.addEventListener('wheel', (e: WheelEvent) => {
+      e.preventDefault();
+      this.targetZoom = Math.max(0.5, Math.min(2.0, this.targetZoom - e.deltaY * 0.001));
+    }, { passive: false });
+  }
+
   // ── Board Rendering ───────────────────────────────────────
-  buildBoard(): void {
-    // Clear old tiles
+  buildBoard(animate = true): void {
     this.clearBoard();
 
     if (!this.state.board) return;
@@ -160,7 +197,17 @@ export class TileRenderer {
     this.centerX = (minC + maxC) / 2;
     this.centerY = (minR + maxR) / 2;
 
+    // Find max layer for staggered entrance
+    let maxLayer = 0;
+    for (const t of tiles) {
+      if (t.layer > maxLayer) maxLayer = t.layer;
+    }
+
+    this.entranceAnims = [];
+    this.entranceActive = animate;
+
     for (const tile of tiles) {
+      if (tile.removed) continue;
       const mesh = this.createTileMesh(tile);
       const x = (tile.col - this.centerX) * (TILE_W + TILE_GAP);
       const y = tile.layer * LAYER_OFFSET;
@@ -171,14 +218,37 @@ export class TileRenderer {
       this.tileMeshes.set(tile.idx, mesh);
 
       // Cache world position for particles
-      const worldPos = new Vector3();
-      mesh.getWorldPosition(worldPos);
       this.tilePositions.set(tile.idx, new Vector3(
         this.boardGroup.position.x + x,
         this.boardGroup.position.y + y,
         this.boardGroup.position.z + z,
       ));
+
+      // Entrance animation
+      if (animate) {
+        const delay = tile.layer * 0.15 + Math.random() * 0.1;
+        mesh.position.y = y + 0.8; // Start above
+        mesh.scale.setScalar(0.01);
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        for (const m of mats) {
+          if (m instanceof MeshStandardMaterial) {
+            m.transparent = true;
+            m.opacity = 0;
+          }
+        }
+        this.entranceAnims.push({
+          mesh,
+          targetY: y,
+          delay,
+          elapsed: 0,
+          duration: 0.4,
+          done: false,
+        });
+      }
     }
+
+    // Update free tiles
+    this.updateFreeTileSet();
   }
 
   private createTileMesh(tile: TileInstance): Mesh {
@@ -229,6 +299,9 @@ export class TileRenderer {
     }
     this.tileMeshes.clear();
     this.tilePositions.clear();
+    this.entranceAnims = [];
+    this.entranceActive = false;
+    this.freeTileSet.clear();
   }
 
   // ── Public accessors for particles ────────────────────────
@@ -240,10 +313,133 @@ export class TileRenderer {
     return this.currentTheme.tileEdge;
   }
 
+  // ── Free tile highlighting ────────────────────────────────
+  toggleFreeTileGlow(): boolean {
+    this.freeTileGlow = !this.freeTileGlow;
+    if (!this.freeTileGlow) {
+      // Reset all tile emissives
+      this.resetAllEmissives();
+    }
+    return this.freeTileGlow;
+  }
+
+  setFreeTileGlow(on: boolean): void {
+    this.freeTileGlow = on;
+    if (!on) this.resetAllEmissives();
+  }
+
+  isFreeTileGlowOn(): boolean {
+    return this.freeTileGlow;
+  }
+
+  updateFreeTileSet(): void {
+    this.freeTileSet.clear();
+    if (!this.state.board) return;
+    const free = this.state.getFreeTiles();
+    for (const t of free) {
+      this.freeTileSet.add(t.idx);
+    }
+  }
+
+  private resetAllEmissives(): void {
+    if (!this.state.board) return;
+    for (const tile of this.state.board.tiles) {
+      if (!tile.removed && !tile.selected) {
+        const mesh = this.tileMeshes.get(tile.idx);
+        if (mesh) {
+          const mats = mesh.material as MeshStandardMaterial[];
+          for (const m of mats) {
+            m.emissive = new Color(this.currentTheme.tileEdge);
+            m.emissiveIntensity = m === mats[2] ? 0.1 : 0.05;
+          }
+        }
+      }
+    }
+  }
+
+  // ── Hover ─────────────────────────────────────────────────
+  setHovered(ndcX: number, ndcY: number, camera: Camera): void {
+    const oldHover = this.hoveredIdx;
+    this.raycaster.setFromCamera({ x: ndcX, y: ndcY } as any, camera);
+    const hits = this.raycaster.intersectObjects(this.boardGroup.children, false);
+
+    let newHover: number | null = null;
+    for (const hit of hits) {
+      const tileIdx = hit.object.userData['tileIdx'];
+      if (tileIdx !== undefined) {
+        // Only hover if tile is free
+        if (this.state.board) {
+          const tile = this.state.board.tiles[tileIdx];
+          if (tile && !tile.removed && this.state.isTileFree(tile)) {
+            newHover = tileIdx;
+          }
+        }
+        break;
+      }
+    }
+
+    if (newHover === oldHover) return;
+
+    // Remove old hover effect
+    if (oldHover !== null) {
+      const mesh = this.tileMeshes.get(oldHover);
+      if (mesh && this.state.board) {
+        const tile = this.state.board.tiles[oldHover];
+        if (tile && !tile.selected) {
+          const mats = mesh.material as MeshStandardMaterial[];
+          for (const m of mats) {
+            m.emissive = new Color(this.currentTheme.tileEdge);
+            m.emissiveIntensity = m === mats[2] ? 0.1 : 0.05;
+          }
+          mesh.scale.setScalar(1.0);
+        }
+      }
+    }
+
+    // Apply new hover effect
+    if (newHover !== null) {
+      const mesh = this.tileMeshes.get(newHover);
+      if (mesh && this.state.board) {
+        const tile = this.state.board.tiles[newHover];
+        if (tile && !tile.selected) {
+          const mats = mesh.material as MeshStandardMaterial[];
+          const hoverColor = new Color(this.currentTheme.tileSelected);
+          for (const m of mats) {
+            m.emissive = hoverColor;
+            m.emissiveIntensity = 0.3;
+          }
+          mesh.scale.setScalar(1.05);
+        }
+      }
+    }
+
+    this.hoveredIdx = newHover;
+  }
+
+  clearHover(): void {
+    if (this.hoveredIdx !== null) {
+      const mesh = this.tileMeshes.get(this.hoveredIdx);
+      if (mesh && this.state.board) {
+        const tile = this.state.board.tiles[this.hoveredIdx];
+        if (tile && !tile.selected) {
+          const mats = mesh.material as MeshStandardMaterial[];
+          for (const m of mats) {
+            m.emissive = new Color(this.currentTheme.tileEdge);
+            m.emissiveIntensity = m === mats[2] ? 0.1 : 0.05;
+          }
+          mesh.scale.setScalar(1.0);
+        }
+      }
+      this.hoveredIdx = null;
+    }
+  }
+
   // ── Tile Updates ──────────────────────────────────────────
   removeTile(idx: number): void {
     const mesh = this.tileMeshes.get(idx);
     if (!mesh) return;
+
+    if (this.hoveredIdx === idx) this.hoveredIdx = null;
 
     const startY = mesh.position.y;
     const duration = 400;
@@ -273,6 +469,9 @@ export class TileRenderer {
         const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
         ms.forEach(m => m.dispose());
         this.tileMeshes.delete(idx);
+
+        // Update free tile set after removal
+        this.updateFreeTileSet();
       }
     };
     requestAnimationFrame(animate);
@@ -368,7 +567,7 @@ export class TileRenderer {
 
     textureCache.clear();
     if (this.state.board) {
-      this.buildBoard();
+      this.buildBoard(false);
     }
   }
 
@@ -380,6 +579,106 @@ export class TileRenderer {
         this.updateTileVisual(tile.idx, tile);
       }
     }
+    this.updateFreeTileSet();
+  }
+
+  // ── Per-frame update ──────────────────────────────────────
+  updateAnimations(dt: number): void {
+    // Entrance animations
+    if (this.entranceActive) {
+      let allDone = true;
+      for (const anim of this.entranceAnims) {
+        if (anim.done) continue;
+        anim.elapsed += dt;
+        if (anim.elapsed < anim.delay) {
+          allDone = false;
+          continue;
+        }
+        const t = Math.min((anim.elapsed - anim.delay) / anim.duration, 1);
+        // Elastic ease-out
+        const ease = t === 1 ? 1 : 1 - Math.pow(2, -10 * t) * Math.cos((t * 10 - 0.75) * (2 * Math.PI / 3));
+
+        anim.mesh.position.y = anim.targetY + (1 - ease) * 0.8;
+        anim.mesh.scale.setScalar(ease);
+
+        const mats = Array.isArray(anim.mesh.material) ? anim.mesh.material : [anim.mesh.material];
+        for (const m of mats) {
+          if (m instanceof MeshStandardMaterial) {
+            m.opacity = ease;
+          }
+        }
+
+        if (t >= 1) {
+          anim.done = true;
+          // Restore non-transparent
+          for (const m of mats) {
+            if (m instanceof MeshStandardMaterial) {
+              m.transparent = false;
+              m.opacity = 1;
+            }
+          }
+        } else {
+          allDone = false;
+        }
+      }
+      if (allDone) {
+        this.entranceActive = false;
+        this.entranceAnims = [];
+      }
+    }
+
+    // Free tile glow pulse
+    if (this.freeTileGlow && this.state.board && !this.entranceActive) {
+      this.freeTileGlowPhase += dt * 2.5;
+      const pulse = 0.15 + Math.sin(this.freeTileGlowPhase) * 0.1;
+      const glowColor = new Color(0x00ff88);
+
+      for (const tile of this.state.board.tiles) {
+        if (tile.removed || tile.selected) continue;
+        const mesh = this.tileMeshes.get(tile.idx);
+        if (!mesh) continue;
+
+        const isFree = this.freeTileSet.has(tile.idx);
+        if (isFree && this.hoveredIdx !== tile.idx) {
+          const mats = mesh.material as MeshStandardMaterial[];
+          for (const m of mats) {
+            m.emissive = glowColor;
+            m.emissiveIntensity = pulse;
+          }
+        }
+      }
+    }
+
+    // Camera zoom smooth lerp
+    if (Math.abs(this.zoomLevel - this.targetZoom) > 0.001) {
+      this.zoomLevel += (this.targetZoom - this.zoomLevel) * 0.1;
+      const basePos = new Vector3(0, 2.2, 1.0);
+      const direction = new Vector3(0, -1.4, -2.5).normalize();
+      const dist = basePos.distanceTo(new Vector3(0, 0.8, -1.5));
+      const zoomedDist = dist / this.zoomLevel;
+      const lookTarget = new Vector3(0, 0.8, -1.5);
+      const zoomDir = new Vector3().subVectors(basePos, lookTarget).normalize();
+      this.world.camera.position.copy(lookTarget).addScaledVector(zoomDir, zoomedDist);
+      this.world.camera.lookAt(0, 0.8, -1.5);
+    }
+
+    // Board idle floating
+    this.boardTime += dt;
+    const floatY = Math.sin(this.boardTime * 0.5) * 0.005;
+    this.boardGroup.position.y = 0.8 + floatY;
+  }
+
+  // ── Zoom control ──────────────────────────────────────────
+  zoomIn(): void {
+    this.targetZoom = Math.min(2.0, this.targetZoom + 0.15);
+  }
+
+  zoomOut(): void {
+    this.targetZoom = Math.max(0.5, this.targetZoom - 0.15);
+  }
+
+  resetZoom(): void {
+    this.targetZoom = 1.0;
   }
 
   // ── Cleanup ───────────────────────────────────────────────

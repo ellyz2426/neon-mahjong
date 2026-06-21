@@ -115,6 +115,25 @@
             "sourceTag": "text",
             "type": "custom",
             "children": [
+              "Free Tiles: OFF"
+            ],
+            "properties": {
+              "name": "btn-freeglow",
+              "fontsize": "16",
+              "color": "#44ff88",
+              "textalign": "center",
+              "backgroundcolor": "#001a0d",
+              "padding": "8",
+              "borderwidth": "1",
+              "bordercolor": "#44ff88",
+              "borderradius": "4"
+            },
+            "dataUid": "uid-9"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
               "SAVE & QUIT"
             ],
             "properties": {
@@ -128,7 +147,7 @@
               "bordercolor": "#ffaa00",
               "borderradius": "4"
             },
-            "dataUid": "uid-9"
+            "dataUid": "uid-10"
           },
           {
             "sourceTag": "text",
@@ -147,7 +166,7 @@
               "bordercolor": "#ff4444",
               "borderradius": "4"
             },
-            "dataUid": "uid-10"
+            "dataUid": "uid-11"
           }
         ],
         "properties": {
@@ -180,7 +199,7 @@
         "column": 0
       },
       "end": {
-        "line": 11,
+        "line": 12,
         "column": 12
       }
     },
@@ -210,7 +229,7 @@
         "column": 2
       },
       "end": {
-        "line": 10,
+        "line": 11,
         "column": 14
       }
     },
@@ -261,7 +280,7 @@
       },
       "end": {
         "line": 8,
-        "column": 195
+        "column": 194
       }
     },
     "uid-10": {
@@ -271,6 +290,16 @@
       },
       "end": {
         "line": 9,
+        "column": 195
+      }
+    },
+    "uid-11": {
+      "start": {
+        "line": 10,
+        "column": 4
+      },
+      "end": {
+        "line": 10,
         "column": 179
       }
     }

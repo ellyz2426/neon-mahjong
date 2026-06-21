@@ -682,4 +682,58 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'tiles2000', name: 'Tile Hoarder', desc: 'Clear 2000 total tiles' },
   { id: 'playtime30', name: 'Dedicated Player', desc: 'Play 30 min total' },
   { id: 'playtime120', name: 'Marathon Player', desc: 'Play 2 hours total' },
+  // Grade achievements
+  { id: 'grade_s', name: 'S-Rank', desc: 'Earn an S grade' },
+  { id: 'grade_a', name: 'A-Rank', desc: 'Earn an A grade or better' },
+  { id: 'grade_s_hard', name: 'Perfection', desc: 'S grade on Hard difficulty' },
+  { id: 'grade_s_speed', name: 'Speed Master', desc: 'S grade in Speed mode' },
+  // Efficiency
+  { id: 'no_undo', name: 'No Regrets', desc: 'Win without using undo' },
+  { id: 'under_60', name: 'Minute Man', desc: 'Clear board in 60 sec' },
+  { id: 'zen_30min', name: 'Zen Master', desc: 'Play Zen for 30+ min' },
+  // Free tile glow
+  { id: 'free_glow', name: 'Illuminated', desc: 'Use free tile glow' },
+  // Zoom
+  { id: 'zoom_user', name: 'Eagle Eye', desc: 'Use zoom controls' },
+  // Volume achievements
+  { id: 'matches100_game', name: 'Tile Marathon', desc: '100+ matches in one session' },
+  { id: 'total2000', name: 'Tile Legend', desc: '2000 total matches' },
+  { id: 'score50k', name: 'Score Titan', desc: 'Score 50000 in one game' },
+  { id: 'all_themes_used', name: 'Style Icon', desc: 'Play with all 8 themes' },
 ];
+
+// ── Grade Calculation ───────────────────────────────────────
+export interface GradeResult {
+  grade: string;
+  stars: number;
+  efficiency: number;
+}
+
+export function calculateGrade(
+  score: number,
+  elapsedTime: number,
+  hintsUsed: number,
+  shufflesUsed: number,
+  bestCombo: number,
+  totalPairs: number,
+  matchCount: number,
+): GradeResult {
+  const efficiency = totalPairs > 0 ? Math.round((matchCount / totalPairs) * 100) : 0;
+
+  let points = 0;
+  points += Math.min(score / 200, 40);
+  points += Math.max(0, (300 - elapsedTime) / 10);
+  points += Math.max(0, (5 - hintsUsed) * 3);
+  points += Math.max(0, (3 - shufflesUsed) * 3);
+  points += bestCombo * 1.5;
+
+  let grade: string;
+  let stars: number;
+  if (points >= 80) { grade = 'S'; stars = 5; }
+  else if (points >= 65) { grade = 'A'; stars = 4; }
+  else if (points >= 50) { grade = 'B'; stars = 3; }
+  else if (points >= 35) { grade = 'C'; stars = 2; }
+  else { grade = 'D'; stars = 1; }
+
+  return { grade, stars, efficiency };
+}
