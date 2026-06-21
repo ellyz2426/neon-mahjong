@@ -1,0 +1,3 @@
+<container name="toast-panel" flexDirection="column" padding="8" backgroundColor="#000a15cc" borderWidth="1" borderColor="#00ffff66" borderRadius="6" width="240" alignItems="center">
+  <text name="toast-text" fontSize="14" color="#ffffff" textAlign="center">Notification</text>
+</container>

@@ -1,0 +1,15 @@
+<container name="hud-panel" flexDirection="column" gap="4" padding="10" backgroundColor="#000a1599" borderWidth="1" borderColor="#00ffff66" borderRadius="6" width="280">
+  <container flexDirection="row" gap="8" justifyContent="space-between">
+    <text name="hud-score" fontSize="16" fontWeight="bold" color="#00ffff">Score: 0</text>
+    <text name="hud-combo" fontSize="14" color="#ffaa00">x1</text>
+  </container>
+  <container flexDirection="row" gap="8" justifyContent="space-between">
+    <text name="hud-matches" fontSize="13" color="#ffffff">Matches: 0/72</text>
+    <text name="hud-tiles" fontSize="13" color="#ffffff">Tiles: 144</text>
+  </container>
+  <container flexDirection="row" gap="8" justifyContent="space-between">
+    <text name="hud-time" fontSize="13" color="#ffffff">Time: 0:00</text>
+    <text name="hud-mode" fontSize="12" color="#00ffff88">Classic</text>
+  </container>
+  <text name="hud-layout" fontSize="11" color="#00ffff44">Fortress</text>
+</container>

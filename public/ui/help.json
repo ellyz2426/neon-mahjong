@@ -1,0 +1,484 @@
+{
+  "element": {
+    "sourceTag": "container",
+    "type": "custom",
+    "children": [
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "HOW TO PLAY"
+        ],
+        "properties": {
+          "fontsize": "22",
+          "fontweight": "bold",
+          "color": "#00ffff",
+          "textalign": "center"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "container",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Goal"
+            ],
+            "properties": {
+              "fontsize": "14",
+              "fontweight": "bold",
+              "color": "#ffaa00"
+            },
+            "dataUid": "uid-4"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Clear all tiles by matching pairs. A tile is free if no tile is on top and at least one side is open."
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-5"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Browser Controls"
+            ],
+            "properties": {
+              "fontsize": "14",
+              "fontweight": "bold",
+              "color": "#ffaa00"
+            },
+            "dataUid": "uid-6"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Click: Select tile | Right-click: Rotate board"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-7"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "H: Hint | S: Shuffle | Z: Undo | ESC: Pause"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-8"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "VR Controls"
+            ],
+            "properties": {
+              "fontsize": "14",
+              "fontweight": "bold",
+              "color": "#ffaa00"
+            },
+            "dataUid": "uid-9"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Trigger: Select tile | Thumbstick: Rotate board"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-10"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "A: Hint | B: Pause | Grip: Shuffle"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-11"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Scoring"
+            ],
+            "properties": {
+              "fontsize": "14",
+              "fontweight": "bold",
+              "color": "#ffaa00"
+            },
+            "dataUid": "uid-12"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "100 pts per match. Fast consecutive matches build combo multiplier up to x10."
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-13"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Modes"
+            ],
+            "properties": {
+              "fontsize": "14",
+              "fontweight": "bold",
+              "color": "#ffaa00"
+            },
+            "dataUid": "uid-14"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Classic: Clear the board, time counts up"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-15"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Timed: 5-minute countdown"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-16"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Zen: No timer, no pressure"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-17"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Daily: Same puzzle for everyone today"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-18"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Speed: +5s per match, bonus for fast clears"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-19"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Practice: Unlimited hints and shuffles"
+            ],
+            "properties": {
+              "fontsize": "12",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-20"
+          }
+        ],
+        "properties": {
+          "flexdirection": "column",
+          "gap": "4",
+          "width": "100%"
+        },
+        "dataUid": "uid-3"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "BACK"
+        ],
+        "properties": {
+          "name": "btn-help-back",
+          "fontsize": "14",
+          "color": "#888888",
+          "textalign": "center",
+          "padding": "6"
+        },
+        "dataUid": "uid-21"
+      }
+    ],
+    "properties": {
+      "name": "help-panel",
+      "flexdirection": "column",
+      "gap": "6",
+      "padding": "16",
+      "backgroundcolor": "#000a15ee",
+      "borderwidth": "2",
+      "bordercolor": "#00ffff",
+      "borderradius": "8",
+      "width": "440",
+      "alignitems": "center"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {},
+  "ranges": {
+    "uid-1": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 22,
+        "column": 12
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 93
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 2,
+        "column": 2
+      },
+      "end": {
+        "line": 20,
+        "column": 14
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 3,
+        "column": 4
+      },
+      "end": {
+        "line": 3,
+        "column": 69
+      }
+    },
+    "uid-5": {
+      "start": {
+        "line": 4,
+        "column": 4
+      },
+      "end": {
+        "line": 4,
+        "column": 148
+      }
+    },
+    "uid-6": {
+      "start": {
+        "line": 5,
+        "column": 4
+      },
+      "end": {
+        "line": 5,
+        "column": 81
+      }
+    },
+    "uid-7": {
+      "start": {
+        "line": 6,
+        "column": 4
+      },
+      "end": {
+        "line": 6,
+        "column": 93
+      }
+    },
+    "uid-8": {
+      "start": {
+        "line": 7,
+        "column": 4
+      },
+      "end": {
+        "line": 7,
+        "column": 90
+      }
+    },
+    "uid-9": {
+      "start": {
+        "line": 8,
+        "column": 4
+      },
+      "end": {
+        "line": 8,
+        "column": 76
+      }
+    },
+    "uid-10": {
+      "start": {
+        "line": 9,
+        "column": 4
+      },
+      "end": {
+        "line": 9,
+        "column": 94
+      }
+    },
+    "uid-11": {
+      "start": {
+        "line": 10,
+        "column": 4
+      },
+      "end": {
+        "line": 10,
+        "column": 81
+      }
+    },
+    "uid-12": {
+      "start": {
+        "line": 11,
+        "column": 4
+      },
+      "end": {
+        "line": 11,
+        "column": 72
+      }
+    },
+    "uid-13": {
+      "start": {
+        "line": 12,
+        "column": 4
+      },
+      "end": {
+        "line": 12,
+        "column": 124
+      }
+    },
+    "uid-14": {
+      "start": {
+        "line": 13,
+        "column": 4
+      },
+      "end": {
+        "line": 13,
+        "column": 70
+      }
+    },
+    "uid-15": {
+      "start": {
+        "line": 14,
+        "column": 4
+      },
+      "end": {
+        "line": 14,
+        "column": 87
+      }
+    },
+    "uid-16": {
+      "start": {
+        "line": 15,
+        "column": 4
+      },
+      "end": {
+        "line": 15,
+        "column": 72
+      }
+    },
+    "uid-17": {
+      "start": {
+        "line": 16,
+        "column": 4
+      },
+      "end": {
+        "line": 16,
+        "column": 73
+      }
+    },
+    "uid-18": {
+      "start": {
+        "line": 17,
+        "column": 4
+      },
+      "end": {
+        "line": 17,
+        "column": 84
+      }
+    },
+    "uid-19": {
+      "start": {
+        "line": 18,
+        "column": 4
+      },
+      "end": {
+        "line": 18,
+        "column": 90
+      }
+    },
+    "uid-20": {
+      "start": {
+        "line": 19,
+        "column": 4
+      },
+      "end": {
+        "line": 19,
+        "column": 85
+      }
+    },
+    "uid-21": {
+      "start": {
+        "line": 21,
+        "column": 2
+      },
+      "end": {
+        "line": 21,
+        "column": 101
+      }
+    }
+  }
+}

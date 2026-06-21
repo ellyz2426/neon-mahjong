@@ -1,0 +1,16 @@
+<container name="gameover-panel" flexDirection="column" gap="8" padding="20" backgroundColor="#000a15ee" borderWidth="2" borderColor="#00ffff" borderRadius="8" width="400" alignItems="center">
+  <text name="go-title" fontSize="28" fontWeight="bold" color="#00ffff" textAlign="center">BOARD CLEARED!</text>
+  <container flexDirection="column" gap="4" width="100%">
+    <text name="go-score" fontSize="18" color="#ffffff" textAlign="center">Score: 0</text>
+    <text name="go-matches" fontSize="14" color="#ffffff" textAlign="center">Matches: 0</text>
+    <text name="go-time" fontSize="14" color="#ffffff" textAlign="center">Time: 0:00</text>
+    <text name="go-combo" fontSize="14" color="#ffaa00" textAlign="center">Best Combo: x1</text>
+    <text name="go-hints" fontSize="14" color="#ffffff" textAlign="center">Hints Used: 0</text>
+    <text name="go-shuffles" fontSize="14" color="#ffffff" textAlign="center">Shuffles: 0</text>
+    <text name="go-xp" fontSize="14" color="#ffaa00" textAlign="center">+0 XP</text>
+  </container>
+  <container flexDirection="column" gap="6" width="100%">
+    <text name="btn-rematch" fontSize="18" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="10" borderWidth="1" borderColor="#00ffff" borderRadius="4">REMATCH</text>
+    <text name="btn-go-menu" fontSize="16" color="#888888" textAlign="center" padding="8">MENU</text>
+  </container>
+</container>

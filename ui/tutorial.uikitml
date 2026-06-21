@@ -1,0 +1,12 @@
+<container name="tut-panel" flexDirection="column" gap="8" padding="20" backgroundColor="#000a15ee" borderWidth="2" borderColor="#00ff88" borderRadius="8" width="420" alignItems="center">
+  <text fontSize="22" fontWeight="bold" color="#00ff88" textAlign="center">WELCOME TO NEON MAHJONG</text>
+  <container flexDirection="column" gap="4" width="100%">
+    <text fontSize="13" color="#ffffff">Match pairs of identical tiles to clear the board.</text>
+    <text fontSize="13" color="#ffffff">A tile is FREE when nothing is on top and at least one side (left or right) is open.</text>
+    <text fontSize="13" color="#ffffff">Click a free tile to select it, then click another matching free tile to clear both.</text>
+    <text fontSize="13" color="#ffffff">Use HINT to highlight a valid pair, SHUFFLE to rearrange tiles.</text>
+    <text fontSize="13" color="#ffffff">Fast consecutive matches build combo multiplier for bonus points!</text>
+    <text fontSize="13" color="#ffaa00">Tip: Clear tiles from the edges and top layers first to free more tiles below.</text>
+  </container>
+  <text name="btn-tut-ok" fontSize="18" color="#ffffff" textAlign="center" backgroundColor="#003322" padding="10" borderWidth="1" borderColor="#00ff88" borderRadius="4">GOT IT!</text>
+</container>

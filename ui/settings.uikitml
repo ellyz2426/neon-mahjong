@@ -1,0 +1,38 @@
+<container name="settings-panel" flexDirection="column" gap="8" padding="16" backgroundColor="#000a15ee" borderWidth="2" borderColor="#00ffff" borderRadius="8" width="380" alignItems="center">
+  <text fontSize="22" fontWeight="bold" color="#00ffff" textAlign="center">SETTINGS</text>
+  <container flexDirection="column" gap="6" width="100%">
+    <container flexDirection="row" justifyContent="space-between" alignItems="center">
+      <text fontSize="14" color="#ffffff">Master</text>
+      <container flexDirection="row" gap="6" alignItems="center">
+        <text name="btn-master-down" fontSize="16" color="#00ffff" padding="4">-</text>
+        <text name="master-vol" fontSize="14" color="#ffffff" width="40" textAlign="center">100</text>
+        <text name="btn-master-up" fontSize="16" color="#00ffff" padding="4">+</text>
+      </container>
+    </container>
+    <container flexDirection="row" justifyContent="space-between" alignItems="center">
+      <text fontSize="14" color="#ffffff">SFX</text>
+      <container flexDirection="row" gap="6" alignItems="center">
+        <text name="btn-sfx-down" fontSize="16" color="#00ffff" padding="4">-</text>
+        <text name="sfx-vol" fontSize="14" color="#ffffff" width="40" textAlign="center">100</text>
+        <text name="btn-sfx-up" fontSize="16" color="#00ffff" padding="4">+</text>
+      </container>
+    </container>
+    <container flexDirection="row" justifyContent="space-between" alignItems="center">
+      <text fontSize="14" color="#ffffff">Music</text>
+      <container flexDirection="row" gap="6" alignItems="center">
+        <text name="btn-music-down" fontSize="16" color="#00ffff" padding="4">-</text>
+        <text name="music-vol" fontSize="14" color="#ffffff" width="40" textAlign="center">100</text>
+        <text name="btn-music-up" fontSize="16" color="#00ffff" padding="4">+</text>
+      </container>
+    </container>
+    <container flexDirection="row" justifyContent="space-between" alignItems="center">
+      <text fontSize="14" color="#ffffff">Theme</text>
+      <container flexDirection="row" gap="6" alignItems="center">
+        <text name="btn-theme-prev" fontSize="16" color="#00ffff" padding="4">&lt;</text>
+        <text name="theme-name" fontSize="13" color="#ffffff" width="120" textAlign="center">Neon Holodeck</text>
+        <text name="btn-theme-next" fontSize="16" color="#00ffff" padding="4">&gt;</text>
+      </container>
+    </container>
+  </container>
+  <text name="btn-settings-back" fontSize="14" color="#888888" textAlign="center" padding="6">BACK</text>
+</container>

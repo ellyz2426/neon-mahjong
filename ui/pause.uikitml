@@ -1,0 +1,9 @@
+<container name="pause-panel" flexDirection="column" gap="10" padding="20" backgroundColor="#000a15ee" borderWidth="2" borderColor="#ffaa00" borderRadius="8" width="320" alignItems="center">
+  <text fontSize="28" fontWeight="bold" color="#ffaa00" textAlign="center">PAUSED</text>
+  <container flexDirection="column" gap="8" width="100%">
+    <text name="btn-resume" fontSize="18" color="#ffffff" textAlign="center" backgroundColor="#1a1100" padding="10" borderWidth="1" borderColor="#ffaa00" borderRadius="4">RESUME</text>
+    <text name="btn-hint" fontSize="16" color="#00ff88" textAlign="center" backgroundColor="#001a0d" padding="8" borderWidth="1" borderColor="#00ff88" borderRadius="4">HINT</text>
+    <text name="btn-shuffle" fontSize="16" color="#ff00ff" textAlign="center" backgroundColor="#1a001a" padding="8" borderWidth="1" borderColor="#ff00ff" borderRadius="4">SHUFFLE</text>
+    <text name="btn-quit" fontSize="16" color="#ff4444" textAlign="center" backgroundColor="#1a0000" padding="8" borderWidth="1" borderColor="#ff4444" borderRadius="4">QUIT</text>
+  </container>
+</container>

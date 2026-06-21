@@ -1,0 +1,542 @@
+// Neon Mahjong VR - Game State Manager
+
+import {
+  type TileType, TILE_TYPES, type TilePosition,
+  type GameMode, GAME_MODES, LAYOUTS, ACHIEVEMENTS,
+  type ThemeDef, THEMES, generateTileSet,
+} from './data';
+
+// ── Tile Instance ───────────────────────────────────────────
+export interface TileInstance {
+  idx: number;           // unique tile index (0-143)
+  typeId: number;        // index into TILE_TYPES
+  col: number;
+  row: number;
+  layer: number;
+  removed: boolean;
+  selected: boolean;
+}
+
+// ── Persistent Stats ────────────────────────────────────────
+export interface PlayerStats {
+  gamesPlayed: number;
+  gamesWon: number;
+  totalMatches: number;
+  bestScore: number;
+  bestCombo: number;
+  fastestWin: number;     // seconds, Infinity if none
+  hintsUsed: number;
+  shufflesUsed: number;
+  totalTilesCleared: number;
+  playTimeMinutes: number;
+  xp: number;
+  level: number;
+  dailyWins: number;
+  layoutWins: Set<string>;
+  themesUsed: Set<string>;
+  unlockedAchievements: Set<string>;
+  leaderboard: { score: number; mode: string; date: string }[];
+}
+
+// ── Board State ─────────────────────────────────────────────
+export interface BoardState {
+  tiles: TileInstance[];
+  mode: GameMode;
+  layoutIdx: number;
+  score: number;
+  combo: number;
+  bestCombo: number;
+  matchCount: number;
+  totalPairs: number;
+  hintsUsed: number;
+  shufflesUsed: number;
+  elapsedTime: number;    // seconds
+  timeRemaining: number;  // for timed modes
+  gameOver: boolean;
+  won: boolean;
+  paused: boolean;
+  undoStack: [number, number][]; // pairs of tile indices for undo
+}
+
+// ── Seeded random for daily puzzles ─────────────────────────
+function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0x100000000;
+  };
+}
+
+function shuffle<T>(arr: T[], rng: () => number = Math.random): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ── Game State ──────────────────────────────────────────────
+export class GameState {
+  board: BoardState | null = null;
+  stats: PlayerStats;
+  currentThemeIdx = 0;
+  currentLayoutIdx = 0;
+
+  // Callbacks
+  onMatch: ((a: TileInstance, b: TileInstance) => void) | null = null;
+  onSelect: ((t: TileInstance) => void) | null = null;
+  onDeselect: (() => void) | null = null;
+  onGameOver: ((won: boolean) => void) | null = null;
+  onAchievement: ((id: string) => void) | null = null;
+  onBoardUpdate: (() => void) | null = null;
+  onCombo: ((combo: number) => void) | null = null;
+  onShuffle: (() => void) | null = null;
+  onTimerUpdate: ((time: number) => void) | null = null;
+
+  private lastMatchTime = 0;
+  private comboTimeout = 3000; // ms
+
+  constructor() {
+    this.stats = this.loadStats();
+  }
+
+  private loadStats(): PlayerStats {
+    try {
+      const raw = localStorage.getItem('neon-mahjong-stats');
+      if (raw) {
+        const d = JSON.parse(raw);
+        return {
+          ...d,
+          fastestWin: d.fastestWin ?? Infinity,
+          layoutWins: new Set(d.layoutWins || []),
+          themesUsed: new Set(d.themesUsed || []),
+          unlockedAchievements: new Set(d.unlockedAchievements || []),
+          leaderboard: d.leaderboard || [],
+        };
+      }
+    } catch { /* ignore */ }
+    return {
+      gamesPlayed: 0, gamesWon: 0, totalMatches: 0, bestScore: 0,
+      bestCombo: 1, fastestWin: Infinity, hintsUsed: 0, shufflesUsed: 0,
+      totalTilesCleared: 0, playTimeMinutes: 0, xp: 0, level: 1,
+      dailyWins: 0, layoutWins: new Set(), themesUsed: new Set(),
+      unlockedAchievements: new Set(), leaderboard: [],
+    };
+  }
+
+  saveStats(): void {
+    try {
+      const d = {
+        ...this.stats,
+        layoutWins: [...this.stats.layoutWins],
+        themesUsed: [...this.stats.themesUsed],
+        unlockedAchievements: [...this.stats.unlockedAchievements],
+      };
+      localStorage.setItem('neon-mahjong-stats', JSON.stringify(d));
+    } catch { /* ignore */ }
+  }
+
+  // ── Board Generation ──────────────────────────────────────
+  startGame(mode: GameMode, layoutIdx: number): void {
+    const positions = LAYOUTS[layoutIdx].generate();
+    const tileTypeIds = generateTileSet();
+
+    // For daily mode, use date-based seed
+    let rng = Math.random;
+    if (mode === 'daily') {
+      const now = new Date();
+      const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+      rng = seededRandom(seed);
+    }
+
+    // Shuffle tile type assignments
+    shuffle(tileTypeIds, rng);
+
+    // Create tile instances
+    const tiles: TileInstance[] = positions.map((pos, idx) => ({
+      idx,
+      typeId: tileTypeIds[idx],
+      col: pos.col,
+      row: pos.row,
+      layer: pos.layer,
+      removed: false,
+      selected: false,
+    }));
+
+    const modeDef = GAME_MODES.find(m => m.id === mode)!;
+
+    this.board = {
+      tiles,
+      mode,
+      layoutIdx,
+      score: 0,
+      combo: 1,
+      bestCombo: 1,
+      matchCount: 0,
+      totalPairs: tiles.length / 2,
+      hintsUsed: 0,
+      shufflesUsed: 0,
+      elapsedTime: 0,
+      timeRemaining: modeDef.timeLimit,
+      gameOver: false,
+      won: false,
+      paused: false,
+      undoStack: [],
+    };
+
+    this.lastMatchTime = 0;
+    this.currentLayoutIdx = layoutIdx;
+    this.stats.gamesPlayed++;
+    this.checkAchievement('play5', this.stats.gamesPlayed >= 5);
+    this.checkAchievement('play10', this.stats.gamesPlayed >= 10);
+    this.checkAchievement('play25', this.stats.gamesPlayed >= 25);
+    this.checkAchievement('play50', this.stats.gamesPlayed >= 50);
+    this.saveStats();
+  }
+
+  // ── Free Tile Detection ───────────────────────────────────
+  isTileFree(tile: TileInstance): boolean {
+    if (tile.removed || !this.board) return false;
+    const { tiles } = this.board;
+
+    // Check if anything is on top (same col, same row, higher layer)
+    const hasOnTop = tiles.some(t =>
+      !t.removed && t !== tile &&
+      t.layer === tile.layer + 1 &&
+      Math.abs(t.col - tile.col) < 1 &&
+      Math.abs(t.row - tile.row) < 1
+    );
+    if (hasOnTop) return false;
+
+    // Check if both sides are blocked
+    const blockedLeft = tiles.some(t =>
+      !t.removed && t !== tile &&
+      t.layer === tile.layer &&
+      t.col === tile.col - 1 &&
+      t.row === tile.row
+    );
+    const blockedRight = tiles.some(t =>
+      !t.removed && t !== tile &&
+      t.layer === tile.layer &&
+      t.col === tile.col + 1 &&
+      t.row === tile.row
+    );
+
+    return !(blockedLeft && blockedRight);
+  }
+
+  getFreeTiles(): TileInstance[] {
+    if (!this.board) return [];
+    return this.board.tiles.filter(t => !t.removed && this.isTileFree(t));
+  }
+
+  // ── Matching ──────────────────────────────────────────────
+  canMatch(a: TileInstance, b: TileInstance): boolean {
+    if (a.idx === b.idx || a.removed || b.removed) return false;
+    const typeA = TILE_TYPES[a.typeId];
+    const typeB = TILE_TYPES[b.typeId];
+    return typeA.matchGroup === typeB.matchGroup;
+  }
+
+  selectTile(tileIdx: number): void {
+    if (!this.board || this.board.gameOver || this.board.paused) return;
+    const tile = this.board.tiles[tileIdx];
+    if (!tile || tile.removed || !this.isTileFree(tile)) return;
+
+    // Find currently selected
+    const selected = this.board.tiles.find(t => t.selected && !t.removed);
+
+    if (selected) {
+      if (selected.idx === tileIdx) {
+        // Deselect
+        selected.selected = false;
+        this.onDeselect?.();
+        return;
+      }
+      if (this.canMatch(selected, tile)) {
+        // Match!
+        this.executeMatch(selected, tile);
+      } else {
+        // Different tile, deselect old and select new
+        selected.selected = false;
+        tile.selected = true;
+        this.onSelect?.(tile);
+      }
+    } else {
+      tile.selected = true;
+      this.onSelect?.(tile);
+    }
+  }
+
+  private executeMatch(a: TileInstance, b: TileInstance): void {
+    if (!this.board) return;
+
+    a.removed = true;
+    b.removed = true;
+    a.selected = false;
+    b.selected = false;
+
+    // Combo
+    const now = performance.now();
+    if (now - this.lastMatchTime < this.comboTimeout && this.lastMatchTime > 0) {
+      this.board.combo = Math.min(this.board.combo + 1, 10);
+    } else {
+      this.board.combo = 1;
+    }
+    this.lastMatchTime = now;
+
+    if (this.board.combo > this.board.bestCombo) {
+      this.board.bestCombo = this.board.combo;
+    }
+    if (this.board.combo > this.stats.bestCombo) {
+      this.stats.bestCombo = this.board.combo;
+    }
+
+    // Score
+    const baseScore = 100;
+    const comboBonus = this.board.combo;
+    const speedBonus = this.board.mode === 'speed' ? 2 : 1;
+    const points = baseScore * comboBonus * speedBonus;
+    this.board.score += points;
+    this.board.matchCount++;
+    this.board.undoStack.push([a.idx, b.idx]);
+
+    // Stats
+    this.stats.totalMatches++;
+    this.stats.totalTilesCleared += 2;
+
+    this.onMatch?.(a, b);
+    if (this.board.combo > 1) this.onCombo?.(this.board.combo);
+
+    // Speed mode: add time
+    if (this.board.mode === 'speed') {
+      this.board.timeRemaining += 5;
+    }
+
+    // Check achievements
+    this.checkMatchAchievements();
+
+    // Check win
+    const remaining = this.board.tiles.filter(t => !t.removed);
+    if (remaining.length === 0) {
+      this.winGame();
+    } else {
+      // Check if any moves available
+      this.checkStaleMate();
+    }
+
+    this.onBoardUpdate?.();
+  }
+
+  undo(): boolean {
+    if (!this.board || this.board.undoStack.length === 0 || this.board.gameOver) return false;
+    const [aIdx, bIdx] = this.board.undoStack.pop()!;
+    const a = this.board.tiles[aIdx];
+    const b = this.board.tiles[bIdx];
+    a.removed = false;
+    b.removed = false;
+    this.board.matchCount--;
+    this.board.score = Math.max(0, this.board.score - 100);
+    this.onBoardUpdate?.();
+    return true;
+  }
+
+  private checkMatchAchievements(): void {
+    if (!this.board) return;
+    this.checkAchievement('first_match', true);
+    this.checkAchievement('combo3', this.board.bestCombo >= 3);
+    this.checkAchievement('combo5', this.board.bestCombo >= 5);
+    this.checkAchievement('combo8', this.board.bestCombo >= 8);
+    this.checkAchievement('combo10', this.board.bestCombo >= 10);
+    this.checkAchievement('matches10', this.board.matchCount >= 10);
+    this.checkAchievement('matches50', this.board.matchCount >= 50);
+    this.checkAchievement('matches72', this.board.matchCount >= 72);
+    this.checkAchievement('total100', this.stats.totalMatches >= 100);
+    this.checkAchievement('total500', this.stats.totalMatches >= 500);
+    this.checkAchievement('total1000', this.stats.totalMatches >= 1000);
+    this.checkAchievement('score5k', this.board.score >= 5000);
+    this.checkAchievement('score10k', this.board.score >= 10000);
+    this.checkAchievement('score20k', this.board.score >= 20000);
+  }
+
+  private winGame(): void {
+    if (!this.board) return;
+    this.board.gameOver = true;
+    this.board.won = true;
+
+    this.stats.gamesWon++;
+    if (this.board.score > this.stats.bestScore) {
+      this.stats.bestScore = this.board.score;
+    }
+    if (this.board.elapsedTime < this.stats.fastestWin) {
+      this.stats.fastestWin = this.board.elapsedTime;
+    }
+
+    // XP
+    const xpGain = Math.floor(this.board.score / 10) + 50;
+    this.stats.xp += xpGain;
+    this.stats.level = Math.floor(this.stats.xp / 200) + 1;
+
+    // Layout wins
+    const layoutName = LAYOUTS[this.board.layoutIdx].name.toLowerCase();
+    this.stats.layoutWins.add(layoutName);
+
+    // Leaderboard
+    this.stats.leaderboard.push({
+      score: this.board.score,
+      mode: this.board.mode,
+      date: new Date().toISOString().slice(0, 10),
+    });
+    this.stats.leaderboard.sort((a, b) => b.score - a.score);
+    if (this.stats.leaderboard.length > 10) {
+      this.stats.leaderboard = this.stats.leaderboard.slice(0, 10);
+    }
+
+    // Achievements
+    this.checkAchievement('first_win', true);
+    this.checkAchievement('speed_demon', this.board.elapsedTime < 180);
+    this.checkAchievement('lightning', this.board.elapsedTime < 120);
+    this.checkAchievement('no_hints', this.board.hintsUsed === 0);
+    this.checkAchievement('no_shuffle', this.board.shufflesUsed === 0);
+    this.checkAchievement('purist', this.board.hintsUsed === 0 && this.board.shufflesUsed === 0);
+    this.checkAchievement('win3', this.stats.gamesWon >= 3);
+    this.checkAchievement('win10', this.stats.gamesWon >= 10);
+    this.checkAchievement('win25', this.stats.gamesWon >= 25);
+
+    // Mode achievements
+    if (this.board.mode === 'timed') this.checkAchievement('timed_win', true);
+    if (this.board.mode === 'speed') this.checkAchievement('speed_win', true);
+    if (this.board.mode === 'daily') {
+      this.checkAchievement('daily_win', true);
+      this.stats.dailyWins++;
+      this.checkAchievement('daily3', this.stats.dailyWins >= 3);
+    }
+
+    // Layout achievements
+    this.checkAchievement('fortress_win', this.stats.layoutWins.has('fortress'));
+    this.checkAchievement('pyramid_win', this.stats.layoutWins.has('pyramid'));
+    this.checkAchievement('tower_win', this.stats.layoutWins.has('tower'));
+    this.checkAchievement('cross_win', this.stats.layoutWins.has('cross'));
+    this.checkAchievement('all_layouts', this.stats.layoutWins.size >= 4);
+
+    // XP / level achievements
+    this.checkAchievement('xp100', this.stats.xp >= 100);
+    this.checkAchievement('level5', this.stats.level >= 5);
+    this.checkAchievement('level10', this.stats.level >= 10);
+
+    this.saveStats();
+    this.onGameOver?.(true);
+  }
+
+  private checkStaleMate(): void {
+    if (!this.board) return;
+    const free = this.getFreeTiles();
+    for (let i = 0; i < free.length; i++) {
+      for (let j = i + 1; j < free.length; j++) {
+        if (this.canMatch(free[i], free[j])) return; // moves available
+      }
+    }
+    // No moves - game over (loss)
+    this.board.gameOver = true;
+    this.board.won = false;
+    this.saveStats();
+    this.onGameOver?.(false);
+  }
+
+  // ── Hints ─────────────────────────────────────────────────
+  findHint(): [number, number] | null {
+    if (!this.board) return null;
+    const free = this.getFreeTiles();
+    for (let i = 0; i < free.length; i++) {
+      for (let j = i + 1; j < free.length; j++) {
+        if (this.canMatch(free[i], free[j])) {
+          return [free[i].idx, free[j].idx];
+        }
+      }
+    }
+    return null;
+  }
+
+  useHint(): [number, number] | null {
+    if (!this.board || this.board.gameOver) return null;
+    const modeDef = GAME_MODES.find(m => m.id === this.board!.mode)!;
+    if (modeDef.hintsAllowed !== -1 && this.board.hintsUsed >= modeDef.hintsAllowed) return null;
+    const hint = this.findHint();
+    if (hint) {
+      this.board.hintsUsed++;
+      this.stats.hintsUsed++;
+    }
+    return hint;
+  }
+
+  // ── Shuffle ───────────────────────────────────────────────
+  shuffleBoard(): boolean {
+    if (!this.board || this.board.gameOver) return false;
+    const modeDef = GAME_MODES.find(m => m.id === this.board!.mode)!;
+    if (modeDef.shufflesAllowed !== -1 && this.board.shufflesUsed >= modeDef.shufflesAllowed) {
+      return false;
+    }
+
+    const active = this.board.tiles.filter(t => !t.removed);
+    const typeIds = active.map(t => t.typeId);
+    shuffle(typeIds);
+    active.forEach((t, i) => { t.typeId = typeIds[i]; });
+
+    this.board.shufflesUsed++;
+    this.stats.shufflesUsed++;
+
+    // Deselect
+    this.board.tiles.forEach(t => { t.selected = false; });
+    this.onDeselect?.();
+    this.onShuffle?.();
+    this.onBoardUpdate?.();
+
+    // Check stalemate after shuffle
+    this.checkStaleMate();
+    return true;
+  }
+
+  // ── Timer ─────────────────────────────────────────────────
+  tick(dt: number): void {
+    if (!this.board || this.board.gameOver || this.board.paused) return;
+
+    this.board.elapsedTime += dt;
+
+    const modeDef = GAME_MODES.find(m => m.id === this.board!.mode)!;
+    if (modeDef.timeLimit > 0) {
+      this.board.timeRemaining -= dt;
+      if (this.board.timeRemaining <= 0) {
+        this.board.timeRemaining = 0;
+        this.board.gameOver = true;
+        this.board.won = false;
+        this.saveStats();
+        this.onGameOver?.(false);
+      }
+    }
+
+    this.onTimerUpdate?.(this.board.elapsedTime);
+  }
+
+  // ── Achievements ──────────────────────────────────────────
+  private checkAchievement(id: string, condition: boolean): void {
+    if (!condition || this.stats.unlockedAchievements.has(id)) return;
+    this.stats.unlockedAchievements.add(id);
+    this.onAchievement?.(id);
+    this.saveStats();
+  }
+
+  // Theme tracking
+  trackTheme(themeId: string): void {
+    this.stats.themesUsed.add(themeId);
+    this.checkAchievement('theme_change', true);
+    this.checkAchievement('all_themes', this.stats.themesUsed.size >= THEMES.length);
+    this.saveStats();
+  }
+
+  // ── Format helpers ────────────────────────────────────────
+  formatTime(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+}

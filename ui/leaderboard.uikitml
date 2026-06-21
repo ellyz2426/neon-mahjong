@@ -1,0 +1,16 @@
+<container name="lb-panel" flexDirection="column" gap="6" padding="16" backgroundColor="#000a15ee" borderWidth="2" borderColor="#00ffff" borderRadius="8" width="420" alignItems="center">
+  <text fontSize="24" fontWeight="bold" color="#00ffff" textAlign="center">LEADERBOARD</text>
+  <container flexDirection="column" gap="3" width="100%">
+    <text name="lb-0" fontSize="12" color="#ffffff">1. ---</text>
+    <text name="lb-1" fontSize="12" color="#ffffff">2. ---</text>
+    <text name="lb-2" fontSize="12" color="#ffffff">3. ---</text>
+    <text name="lb-3" fontSize="12" color="#ffffff">4. ---</text>
+    <text name="lb-4" fontSize="12" color="#ffffff">5. ---</text>
+    <text name="lb-5" fontSize="12" color="#ffffff">6. ---</text>
+    <text name="lb-6" fontSize="12" color="#ffffff">7. ---</text>
+    <text name="lb-7" fontSize="12" color="#ffffff">8. ---</text>
+    <text name="lb-8" fontSize="12" color="#ffffff">9. ---</text>
+    <text name="lb-9" fontSize="12" color="#ffffff">10. ---</text>
+  </container>
+  <text name="btn-lb-back" fontSize="14" color="#888888" textAlign="center" padding="6">BACK</text>
+</container>

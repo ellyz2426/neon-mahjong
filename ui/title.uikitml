@@ -1,0 +1,15 @@
+<container name="title-panel" flexDirection="column" gap="10" padding="20" backgroundColor="#000a15ee" borderWidth="2" borderColor="#00ffff" borderRadius="8" width="420" alignItems="center">
+  <text name="game-title" fontSize="32" fontWeight="bold" color="#00ffff" textAlign="center">NEON MAHJONG</text>
+  <text name="subtitle" fontSize="14" color="#00ffff88" textAlign="center">3D Tile Matching Puzzle</text>
+  <text name="level-display" fontSize="12" color="#ffaa00" textAlign="center">Level 1 - 0 XP</text>
+  <container flexDirection="column" gap="6" width="100%">
+    <text name="btn-play" fontSize="18" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="10" borderWidth="1" borderColor="#00ffff" borderRadius="4">PLAY</text>
+    <text name="btn-leaderboard" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#002233" padding="8" borderWidth="1" borderColor="#0088aa" borderRadius="4">LEADERBOARD</text>
+    <text name="btn-achievements" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#002233" padding="8" borderWidth="1" borderColor="#0088aa" borderRadius="4">ACHIEVEMENTS</text>
+    <text name="btn-stats" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#002233" padding="8" borderWidth="1" borderColor="#0088aa" borderRadius="4">STATS</text>
+    <text name="btn-skins" fontSize="16" color="#ffaa00" textAlign="center" backgroundColor="#1a1100" padding="8" borderWidth="1" borderColor="#ffaa00" borderRadius="4">TILE THEMES</text>
+    <text name="btn-settings" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#002233" padding="8" borderWidth="1" borderColor="#0088aa" borderRadius="4">SETTINGS</text>
+    <text name="btn-help" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#002233" padding="8" borderWidth="1" borderColor="#0088aa" borderRadius="4">HELP</text>
+  </container>
+  <text name="wins-display" fontSize="11" color="#00ffff66" textAlign="center">0 wins | 0 matches</text>
+</container>

@@ -1,0 +1,17 @@
+<container name="stats-panel" flexDirection="column" gap="6" padding="16" backgroundColor="#000a15ee" borderWidth="2" borderColor="#00ffff" borderRadius="8" width="380" alignItems="center">
+  <text fontSize="22" fontWeight="bold" color="#00ffff" textAlign="center">STATISTICS</text>
+  <container flexDirection="column" gap="3" width="100%">
+    <text name="stat-0" fontSize="13" color="#ffffff">Games Played: 0</text>
+    <text name="stat-1" fontSize="13" color="#ffffff">Games Won: 0</text>
+    <text name="stat-2" fontSize="13" color="#ffffff">Total Matches: 0</text>
+    <text name="stat-3" fontSize="13" color="#ffffff">Best Score: 0</text>
+    <text name="stat-4" fontSize="13" color="#ffffff">Best Combo: x1</text>
+    <text name="stat-5" fontSize="13" color="#ffffff">Fastest Win: --:--</text>
+    <text name="stat-6" fontSize="13" color="#ffffff">Hints Used: 0</text>
+    <text name="stat-7" fontSize="13" color="#ffffff">Shuffles Used: 0</text>
+    <text name="stat-8" fontSize="13" color="#ffffff">Total Tiles Cleared: 0</text>
+    <text name="stat-9" fontSize="13" color="#ffffff">Play Time: 0m</text>
+    <text name="stat-10" fontSize="13" color="#ffaa00">Level: 1 (0 XP)</text>
+  </container>
+  <text name="btn-stats-back" fontSize="14" color="#888888" textAlign="center" padding="6">BACK</text>
+</container>

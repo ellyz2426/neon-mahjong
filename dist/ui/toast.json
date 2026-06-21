@@ -1,0 +1,57 @@
+{
+  "element": {
+    "sourceTag": "container",
+    "type": "custom",
+    "children": [
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "Notification"
+        ],
+        "properties": {
+          "name": "toast-text",
+          "fontsize": "14",
+          "color": "#ffffff",
+          "textalign": "center"
+        },
+        "dataUid": "uid-2"
+      }
+    ],
+    "properties": {
+      "name": "toast-panel",
+      "flexdirection": "column",
+      "padding": "8",
+      "backgroundcolor": "#000a15cc",
+      "borderwidth": "1",
+      "bordercolor": "#00ffff66",
+      "borderradius": "6",
+      "width": "240",
+      "alignitems": "center"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {},
+  "ranges": {
+    "uid-1": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 2,
+        "column": 12
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 94
+      }
+    }
+  }
+}

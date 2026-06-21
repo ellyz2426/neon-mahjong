@@ -1,0 +1,35 @@
+
+> neon-mahjong@1.0.0 dev:runtime
+> vite
+
+🚀 Generating initial UIKitML files for dev server...
+👁️  UIKitML file watcher started - monitoring for changes...
+8:08:07 AM [vite] (client) Re-optimizing dependencies because vite config has changed
+
+  VITE v7.3.5  ready in 2284 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://198.19.0.2:5173/
+[browser] [PanelUISystem] Error loading panel for entity 8: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+8:09:00 AM [vite] (client) page reload src/systems/ui-system.ts
+🗑️ UIKitML file unlink: ui/achievements.uikitml
+➕ UIKitML file add: ui/achvlist.uikitml
+✅ UIKitML file recompiled: achvlist.uikitml
+[browser] [PanelUISystem] Error loading panel for entity 8: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+8:09:09 AM [vite] (client) page reload src/index.ts
+
+🥽 IWSDK Dev Summary (Development):
+  - Device: metaQuest3
+  - Runtime injected: 1116.7KB
+  - Activation mode: localhost
+  - AI: agent mode (WebSocket at /__iwer_mcp)
+  - Note: Runtime only activates on localhost/local networks
+
+
+🥽 IWSDK Dev Summary (Development):
+  - Device: metaQuest3
+  - Runtime injected: 1116.7KB
+  - Activation mode: localhost
+  - AI: agent mode (WebSocket at /__iwer_mcp)
+  - Note: Runtime only activates on localhost/local networks
+
