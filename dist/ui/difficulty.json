@@ -7,12 +7,12 @@
         "sourceTag": "text",
         "type": "custom",
         "children": [
-          "PAUSED"
+          "DIFFICULTY"
         ],
         "properties": {
-          "fontsize": "28",
+          "fontsize": "22",
           "fontweight": "bold",
-          "color": "#ffaa00",
+          "color": "#00ffff",
           "textalign": "center"
         },
         "dataUid": "uid-2"
@@ -21,12 +21,12 @@
         "sourceTag": "text",
         "type": "custom",
         "children": [
-          "Normal"
+          "Affects hints, shuffles, time, and scoring"
         ],
         "properties": {
-          "name": "pause-diff",
+          "name": "diff-desc",
           "fontsize": "12",
-          "color": "#ffaa0088",
+          "color": "#00ffff88",
           "textalign": "center"
         },
         "dataUid": "uid-3"
@@ -39,17 +39,17 @@
             "sourceTag": "text",
             "type": "custom",
             "children": [
-              "RESUME"
+              "Easy - More time & hints (x0.8 score)"
             ],
             "properties": {
-              "name": "btn-resume",
-              "fontsize": "18",
-              "color": "#ffffff",
+              "name": "btn-easy",
+              "fontsize": "16",
+              "color": "#00ff88",
               "textalign": "center",
-              "backgroundcolor": "#1a1100",
+              "backgroundcolor": "#001a0d",
               "padding": "10",
               "borderwidth": "1",
-              "bordercolor": "#ffaa00",
+              "bordercolor": "#00ff88",
               "borderradius": "4"
             },
             "dataUid": "uid-5"
@@ -58,17 +58,17 @@
             "sourceTag": "text",
             "type": "custom",
             "children": [
-              "HINT"
+              "Normal - Standard rules (x1.0 score)"
             ],
             "properties": {
-              "name": "btn-hint",
+              "name": "btn-normal",
               "fontsize": "16",
-              "color": "#00ff88",
+              "color": "#ffffff",
               "textalign": "center",
-              "backgroundcolor": "#001a0d",
-              "padding": "8",
+              "backgroundcolor": "#003333",
+              "padding": "10",
               "borderwidth": "1",
-              "bordercolor": "#00ff88",
+              "bordercolor": "#00ffff",
               "borderradius": "4"
             },
             "dataUid": "uid-6"
@@ -77,77 +77,20 @@
             "sourceTag": "text",
             "type": "custom",
             "children": [
-              "SHUFFLE"
+              "Hard - Less time & hints (x1.5 score)"
             ],
             "properties": {
-              "name": "btn-shuffle",
+              "name": "btn-hard",
               "fontsize": "16",
-              "color": "#ff00ff",
+              "color": "#ff4466",
               "textalign": "center",
-              "backgroundcolor": "#1a001a",
-              "padding": "8",
+              "backgroundcolor": "#1a0008",
+              "padding": "10",
               "borderwidth": "1",
-              "bordercolor": "#ff00ff",
+              "bordercolor": "#ff4466",
               "borderradius": "4"
             },
             "dataUid": "uid-7"
-          },
-          {
-            "sourceTag": "text",
-            "type": "custom",
-            "children": [
-              "AUTO-COMPLETE"
-            ],
-            "properties": {
-              "name": "btn-autocomplete",
-              "fontsize": "16",
-              "color": "#00ccff",
-              "textalign": "center",
-              "backgroundcolor": "#001a28",
-              "padding": "8",
-              "borderwidth": "1",
-              "bordercolor": "#00ccff",
-              "borderradius": "4"
-            },
-            "dataUid": "uid-8"
-          },
-          {
-            "sourceTag": "text",
-            "type": "custom",
-            "children": [
-              "SAVE & QUIT"
-            ],
-            "properties": {
-              "name": "btn-save-quit",
-              "fontsize": "16",
-              "color": "#ffaa00",
-              "textalign": "center",
-              "backgroundcolor": "#1a1100",
-              "padding": "8",
-              "borderwidth": "1",
-              "bordercolor": "#ffaa00",
-              "borderradius": "4"
-            },
-            "dataUid": "uid-9"
-          },
-          {
-            "sourceTag": "text",
-            "type": "custom",
-            "children": [
-              "QUIT"
-            ],
-            "properties": {
-              "name": "btn-quit",
-              "fontsize": "16",
-              "color": "#ff4444",
-              "textalign": "center",
-              "backgroundcolor": "#1a0000",
-              "padding": "8",
-              "borderwidth": "1",
-              "bordercolor": "#ff4444",
-              "borderradius": "4"
-            },
-            "dataUid": "uid-10"
           }
         ],
         "properties": {
@@ -156,18 +99,33 @@
           "width": "100%"
         },
         "dataUid": "uid-4"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "BACK"
+        ],
+        "properties": {
+          "name": "btn-diff-back",
+          "fontsize": "14",
+          "color": "#888888",
+          "textalign": "center",
+          "padding": "6"
+        },
+        "dataUid": "uid-8"
       }
     ],
     "properties": {
-      "name": "pause-panel",
+      "name": "diff-panel",
       "flexdirection": "column",
       "gap": "10",
       "padding": "20",
       "backgroundcolor": "#000a15ee",
       "borderwidth": "2",
-      "bordercolor": "#ffaa00",
+      "bordercolor": "#00ffff",
       "borderradius": "8",
-      "width": "320",
+      "width": "380",
       "alignitems": "center"
     },
     "dataUid": "uid-1"
@@ -180,7 +138,7 @@
         "column": 0
       },
       "end": {
-        "line": 11,
+        "line": 9,
         "column": 12
       }
     },
@@ -191,7 +149,7 @@
       },
       "end": {
         "line": 1,
-        "column": 88
+        "column": 92
       }
     },
     "uid-3": {
@@ -201,7 +159,7 @@
       },
       "end": {
         "line": 2,
-        "column": 90
+        "column": 125
       }
     },
     "uid-4": {
@@ -210,7 +168,7 @@
         "column": 2
       },
       "end": {
-        "line": 10,
+        "line": 7,
         "column": 14
       }
     },
@@ -221,7 +179,7 @@
       },
       "end": {
         "line": 4,
-        "column": 184
+        "column": 217
       }
     },
     "uid-6": {
@@ -231,7 +189,7 @@
       },
       "end": {
         "line": 5,
-        "column": 179
+        "column": 214
       }
     },
     "uid-7": {
@@ -241,37 +199,17 @@
       },
       "end": {
         "line": 6,
-        "column": 185
+        "column": 217
       }
     },
     "uid-8": {
       "start": {
-        "line": 7,
-        "column": 4
-      },
-      "end": {
-        "line": 7,
-        "column": 196
-      }
-    },
-    "uid-9": {
-      "start": {
         "line": 8,
-        "column": 4
+        "column": 2
       },
       "end": {
         "line": 8,
-        "column": 195
-      }
-    },
-    "uid-10": {
-      "start": {
-        "line": 9,
-        "column": 4
-      },
-      "end": {
-        "line": 9,
-        "column": 179
+        "column": 101
       }
     }
   }

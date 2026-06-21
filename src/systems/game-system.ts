@@ -10,11 +10,12 @@ import { TileRenderer } from '../renderer';
 import { AudioManager } from '../audio';
 import { ParticleSystem } from '../particles';
 import { ScorePopupSystem } from '../score-popup';
-import { LAYOUTS, GAME_MODES, CHALLENGES, type GameMode, type ChallengeDef } from '../data';
+import { LAYOUTS, GAME_MODES, CHALLENGES, type GameMode, type ChallengeDef, type Difficulty } from '../data';
 
 export type GameScreen = 'title' | 'modeselect' | 'layoutselect' | 'countdown'
   | 'playing' | 'pause' | 'gameover' | 'achievements' | 'stats'
-  | 'settings' | 'skins' | 'help' | 'leaderboard' | 'tutorial' | 'challengeselect';
+  | 'settings' | 'skins' | 'help' | 'leaderboard' | 'tutorial' | 'challengeselect'
+  | 'difficultyselect';
 
 export class GameSystem extends createSystem({}) {
   private _state!: GameState;
@@ -130,9 +131,40 @@ export class GameSystem extends createSystem({}) {
 
     // Mouse input for tile selection
     const canvas = this.world.renderer.domElement;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragMoved = false;
+
+    canvas.addEventListener('mousedown', (e: MouseEvent) => {
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      dragMoved = false;
+    });
+
+    canvas.addEventListener('mousemove', (e: MouseEvent) => {
+      if (!isDragging) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        dragMoved = true;
+        const boardGroup = this._renderer['boardGroup'];
+        if (boardGroup && this._screen === 'playing') {
+          boardGroup.rotation.y += dx * 0.005;
+        }
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+      }
+    });
+
+    canvas.addEventListener('mouseup', (e: MouseEvent) => {
+      isDragging = false;
+    });
+
     canvas.addEventListener('click', (e: MouseEvent) => {
       this._audio.init();
-      if (this._screen !== 'playing') return;
+      if (this._screen !== 'playing' || dragMoved) return;
       const rect = canvas.getBoundingClientRect();
       const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -173,13 +205,18 @@ export class GameSystem extends createSystem({}) {
     if (mode === 'challenge') {
       this.goTo('challengeselect');
     } else {
-      this.goTo('layoutselect');
+      this.goTo('difficultyselect');
     }
   }
 
   startChallengeSetup(challengeId: string): void {
     this.pendingMode = 'challenge';
     this.pendingChallengeId = challengeId;
+    this.goTo('difficultyselect');
+  }
+
+  selectDifficulty(difficulty: Difficulty): void {
+    this._state.currentDifficulty = difficulty;
     this.goTo('layoutselect');
   }
 
@@ -202,11 +239,28 @@ export class GameSystem extends createSystem({}) {
   }
 
   startGame(): void {
-    this._state.startGame(this.pendingMode, this.pendingLayout, this.pendingChallengeId);
+    this._state.startGame(this.pendingMode, this.pendingLayout, this.pendingChallengeId, this._state.currentDifficulty);
     this._renderer.buildBoard();
     this._audio.startMusic();
     this.autoCompleteAvailable = false;
     this.goTo('playing');
+  }
+
+  resumeGame(): boolean {
+    if (!this._state.resumeGame()) return false;
+    this._renderer.buildBoard();
+    this._audio.startMusic();
+    this.autoCompleteAvailable = false;
+    this.goTo('playing');
+    return true;
+  }
+
+  saveCurrentGame(): boolean {
+    return this._state.saveGame();
+  }
+
+  hasSavedGame(): boolean {
+    return this._state.hasSavedGame();
   }
 
   triggerAutoComplete(): void {

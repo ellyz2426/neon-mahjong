@@ -51,6 +51,7 @@ function createPanels(world: World): void {
     { name: 'title', y: 1.1, visible: true },
     { name: 'hud', y: 1.8, visible: false },
     { name: 'modeselect', y: 1.1, visible: false },
+    { name: 'difficulty', y: 1.1, visible: false },
     { name: 'layout', y: 1.1, visible: false },
     { name: 'gameover', y: 1.1, visible: false },
     { name: 'pause', y: 1.1, visible: false },

@@ -15,7 +15,7 @@ import { AudioManager } from '../audio';
 import { TileRenderer } from '../renderer';
 import {
   TILE_TYPES, THEMES, LAYOUTS, GAME_MODES,
-  ACHIEVEMENTS, CHALLENGES, type GameMode,
+  ACHIEVEMENTS, CHALLENGES, DIFFICULTIES, type GameMode, type Difficulty,
 } from '../data';
 
 function setText(doc: UIKitDocument | undefined | null, id: string, text: string): void {
@@ -89,6 +89,10 @@ export class UISystem extends createSystem({
     required: [PanelUI, PanelDocument],
     where: [eq(PanelUI, 'config', './ui/challenge.json')],
   },
+  diffPanel: {
+    required: [PanelUI, PanelDocument],
+    where: [eq(PanelUI, 'config', './ui/difficulty.json')],
+  },
 }) {
   private _state!: GameState;
   private _gameSystem!: GameSystem;
@@ -112,6 +116,7 @@ export class UISystem extends createSystem({
   private toastDoc: UIKitDocument | null = null;
   private tutDoc: UIKitDocument | null = null;
   private challengeDoc: UIKitDocument | null = null;
+  private diffDoc: UIKitDocument | null = null;
 
   // Panel entities
   private titleEntity: import('@iwsdk/core').Entity | null = null;
@@ -130,6 +135,7 @@ export class UISystem extends createSystem({
   private toastEntity: import('@iwsdk/core').Entity | null = null;
   private tutEntity: import('@iwsdk/core').Entity | null = null;
   private challengeEntity: import('@iwsdk/core').Entity | null = null;
+  private diffEntity: import('@iwsdk/core').Entity | null = null;
 
   // State
   private achPage = 0;
@@ -244,6 +250,9 @@ export class UISystem extends createSystem({
     bindPanel('challengePanel',
       d => { this.challengeDoc = d; }, e => { this.challengeEntity = e; },
       d => this.setupChallengeSelect(d));
+    bindPanel('diffPanel',
+      d => { this.diffDoc = d; }, e => { this.diffEntity = e; },
+      d => this.setupDifficulty(d));
 
     // Check if all main panels bound
     if (this.titleDoc && this.hudDoc) {
@@ -258,6 +267,12 @@ export class UISystem extends createSystem({
     this.addClick(doc, 'btn-play', () => {
       this._audio.playClick();
       this._gameSystem.goTo('modeselect');
+    });
+    this.addClick(doc, 'btn-resume', () => {
+      this._audio.playClick();
+      if (this._gameSystem.hasSavedGame()) {
+        this._gameSystem.resumeGame();
+      }
     });
     this.addClick(doc, 'btn-leaderboard', () => {
       this._audio.playClick();
@@ -313,6 +328,7 @@ export class UISystem extends createSystem({
     const layouts: [string, number][] = [
       ['btn-fortress', 0], ['btn-pyramid', 1], ['btn-tower', 2],
       ['btn-cross', 3], ['btn-diamond', 4], ['btn-spiral', 5],
+      ['btn-butterfly', 6], ['btn-turtle', 7],
     ];
     for (const [btn, idx] of layouts) {
       this.addClick(doc, btn, () => {
@@ -334,6 +350,22 @@ export class UISystem extends createSystem({
       });
     }
     this.addClick(doc, 'btn-ch-back', () => {
+      this._audio.playClick();
+      this._gameSystem.goTo('modeselect');
+    });
+  }
+
+  private setupDifficulty(doc: UIKitDocument): void {
+    const diffs: [string, Difficulty][] = [
+      ['btn-easy', 'easy'], ['btn-normal', 'normal'], ['btn-hard', 'hard'],
+    ];
+    for (const [btn, diff] of diffs) {
+      this.addClick(doc, btn, () => {
+        this._audio.playClick();
+        this._gameSystem.selectDifficulty(diff as Difficulty);
+      });
+    }
+    this.addClick(doc, 'btn-diff-back', () => {
       this._audio.playClick();
       this._gameSystem.goTo('modeselect');
     });
@@ -372,6 +404,14 @@ export class UISystem extends createSystem({
         this._gameSystem.togglePause();
         setTimeout(() => this._gameSystem.triggerAutoComplete(), 100);
       }
+    });
+    this.addClick(doc, 'btn-save-quit', () => {
+      this._audio.playClick();
+      this._gameSystem.saveCurrentGame();
+      this._audio.stopMusic();
+      this._tileRenderer.clearBoard();
+      this.updateTitleScreen();
+      this._gameSystem.goTo('title');
     });
     this.addClick(doc, 'btn-quit', () => {
       this._audio.playClick();
@@ -508,6 +548,7 @@ export class UISystem extends createSystem({
       ['title', this.titleEntity],
       ['playing', this.hudEntity],
       ['modeselect', this.modeEntity],
+      ['difficultyselect', this.diffEntity],
       ['layoutselect', this.layoutEntity],
       ['gameover', this.goEntity],
       ['pause', this.pauseEntity],
@@ -543,6 +584,9 @@ export class UISystem extends createSystem({
       case 'pause':
         this.updatePauseMenu();
         break;
+      case 'layoutselect':
+        this.updateLayoutScreen();
+        break;
     }
   }
 
@@ -551,6 +595,25 @@ export class UISystem extends createSystem({
     const s = this._state.stats;
     setText(this.titleDoc, 'level-display', `Level ${s.level} - ${s.xp} XP`);
     setText(this.titleDoc, 'wins-display', `${s.gamesWon} wins | ${s.gamesPlayed} games`);
+
+    // Show/hide resume button
+    const resumeBtn = this.titleDoc.getElementById('btn-resume');
+    if (resumeBtn) {
+      const hasSave = this._gameSystem.hasSavedGame();
+      (resumeBtn as any).setProperties?.({ opacity: hasSave ? 1 : 0.3 });
+    }
+  }
+
+  private updateLayoutScreen(): void {
+    if (!this.layoutDoc) return;
+    const diffDef = DIFFICULTIES.find(d => d.id === this._state.currentDifficulty);
+    setText(this.layoutDoc, 'diff-label', diffDef ? diffDef.name : 'Normal');
+  }
+
+  private updatePauseMenu(): void {
+    if (!this.pauseDoc) return;
+    const diffDef = DIFFICULTIES.find(d => d.id === (this._state.board?.difficulty || 'normal'));
+    setText(this.pauseDoc, 'pause-diff', diffDef ? diffDef.name : 'Normal');
   }
 
   updateHUD(): void {
@@ -620,10 +683,6 @@ export class UISystem extends createSystem({
     }
   }
 
-  private updatePauseMenu(): void {
-    // Nothing special needed - auto-complete button click is handled in setup
-  }
-
   private updateAchievements(): void {
     if (!this.achDoc) return;
     const perPage = 15;
@@ -650,6 +709,7 @@ export class UISystem extends createSystem({
   private updateStats(): void {
     if (!this.statsDoc) return;
     const s = this._state.stats;
+    const winRate = s.gamesPlayed > 0 ? Math.round((s.gamesWon / s.gamesPlayed) * 100) : 0;
     setText(this.statsDoc, 'stat-0', `Games Played: ${s.gamesPlayed}`);
     setText(this.statsDoc, 'stat-1', `Games Won: ${s.gamesWon}`);
     setText(this.statsDoc, 'stat-2', `Total Matches: ${s.totalMatches}`);
@@ -657,10 +717,12 @@ export class UISystem extends createSystem({
     setText(this.statsDoc, 'stat-4', `Best Combo: x${s.bestCombo}`);
     setText(this.statsDoc, 'stat-5', `Fastest Win: ${s.fastestWin === Infinity ? '--:--' : this._state.formatTime(s.fastestWin)}`);
     setText(this.statsDoc, 'stat-6', `Hints Used: ${s.hintsUsed}`);
-    setText(this.statsDoc, 'stat-7', `Shuffles Used: ${s.shufflesUsed}`);
-    setText(this.statsDoc, 'stat-8', `Total Tiles Cleared: ${s.totalTilesCleared}`);
-    setText(this.statsDoc, 'stat-9', `Win Streak: ${s.winStreak} (Best: ${s.bestWinStreak})`);
-    setText(this.statsDoc, 'stat-10', `Level: ${s.level} (${s.xp} XP)`);
+    setText(this.statsDoc, 'stat-7', `Tiles Cleared: ${s.totalTilesCleared}`);
+    setText(this.statsDoc, 'stat-8', `Win Streak: ${s.winStreak} (Best: ${s.bestWinStreak})`);
+    setText(this.statsDoc, 'stat-9', `Level: ${s.level} (${s.xp} XP)`);
+    setText(this.statsDoc, 'stat-10', `Hard Wins: ${s.hardWins}`);
+    setText(this.statsDoc, 'stat-11', `Play Time: ${Math.round(s.playTimeMinutes)} min`);
+    setText(this.statsDoc, 'stat-12', `Win Rate: ${winRate}%`);
   }
 
   private updateSettings(): void {

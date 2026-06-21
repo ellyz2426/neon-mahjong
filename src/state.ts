@@ -4,6 +4,7 @@ import {
   type TileType, TILE_TYPES, type TilePosition,
   type GameMode, GAME_MODES, LAYOUTS, ACHIEVEMENTS, CHALLENGES,
   type ThemeDef, THEMES, generateTileSet, type ChallengeDef,
+  type Difficulty, DIFFICULTIES,
 } from './data';
 
 // ── Tile Instance ───────────────────────────────────────────
@@ -40,6 +41,9 @@ export interface PlayerStats {
   bestWinStreak: number;
   modesWon: Set<string>;
   challengesCompleted: Set<string>;
+  hardWins: number;
+  perModeStats: Map<string, { played: number; won: number; bestScore: number }>;
+  perLayoutStats: Map<string, { played: number; won: number }>;
 }
 
 // ── Board State ─────────────────────────────────────────────
@@ -63,6 +67,8 @@ export interface BoardState {
   challengeId: string | null;
   firstMatchDone: boolean;
   autoCompleted: boolean;
+  difficulty: Difficulty;
+  resumed: boolean;
 }
 
 // ── Seeded random for daily puzzles ─────────────────────────
@@ -88,6 +94,7 @@ export class GameState {
   stats: PlayerStats;
   currentThemeIdx = 0;
   currentLayoutIdx = 0;
+  currentDifficulty: Difficulty = 'normal';
 
   // Callbacks
   onMatch: ((a: TileInstance, b: TileInstance, score: number) => void) | null = null;
@@ -124,6 +131,9 @@ export class GameState {
           bestWinStreak: d.bestWinStreak || 0,
           modesWon: new Set(d.modesWon || []),
           challengesCompleted: new Set(d.challengesCompleted || []),
+          hardWins: d.hardWins || 0,
+          perModeStats: new Map(Object.entries(d.perModeStats || {})),
+          perLayoutStats: new Map(Object.entries(d.perLayoutStats || {})),
         };
       }
     } catch { /* ignore */ }
@@ -135,27 +145,33 @@ export class GameState {
       unlockedAchievements: new Set(), leaderboard: [],
       winStreak: 0, bestWinStreak: 0, modesWon: new Set(),
       challengesCompleted: new Set(),
+      hardWins: 0,
+      perModeStats: new Map(),
+      perLayoutStats: new Map(),
     };
   }
 
   saveStats(): void {
     try {
-      const d = {
+      const d: Record<string, unknown> = {
         ...this.stats,
         layoutWins: [...this.stats.layoutWins],
         themesUsed: [...this.stats.themesUsed],
         unlockedAchievements: [...this.stats.unlockedAchievements],
         modesWon: [...this.stats.modesWon],
         challengesCompleted: [...this.stats.challengesCompleted],
+        perModeStats: Object.fromEntries(this.stats.perModeStats),
+        perLayoutStats: Object.fromEntries(this.stats.perLayoutStats),
       };
       localStorage.setItem('neon-mahjong-stats', JSON.stringify(d));
     } catch { /* ignore */ }
   }
 
   // ── Board Generation ──────────────────────────────────────
-  startGame(mode: GameMode, layoutIdx: number, challengeId: string | null = null): void {
+  startGame(mode: GameMode, layoutIdx: number, challengeId: string | null = null, difficulty: Difficulty = 'normal', resumed = false): void {
     const positions = LAYOUTS[layoutIdx].generate();
     const tileTypeIds = generateTileSet();
+    const diffDef = DIFFICULTIES.find(d => d.id === difficulty)!;
 
     // For daily mode, use date-based seed
     let rng = Math.random;
@@ -181,8 +197,16 @@ export class GameState {
 
     const modeDef = GAME_MODES.find(m => m.id === mode)!;
 
-    // Apply challenge overrides
+    // Apply difficulty modifiers to hints and shuffles
+    let hintsAllowed = modeDef.hintsAllowed;
+    let shufflesAllowed = modeDef.shufflesAllowed;
     let timeLimit = modeDef.timeLimit;
+
+    if (hintsAllowed > 0) hintsAllowed = Math.max(1, Math.round(hintsAllowed * diffDef.hintMod));
+    if (shufflesAllowed > 0) shufflesAllowed = Math.max(1, Math.round(shufflesAllowed * diffDef.shuffleMod));
+    if (timeLimit > 0) timeLimit = Math.round(timeLimit * diffDef.timeMod);
+
+    // Apply challenge overrides
     if (challengeId) {
       const ch = CHALLENGES.find(c => c.id === challengeId);
       if (ch && ch.timeLimit > 0) timeLimit = ch.timeLimit;
@@ -208,6 +232,8 @@ export class GameState {
       challengeId,
       firstMatchDone: false,
       autoCompleted: false,
+      difficulty,
+      resumed,
     };
 
     this.lastMatchTime = 0;
@@ -331,7 +357,8 @@ export class GameState {
     const baseScore = 100;
     const comboBonus = this.board.combo;
     const speedBonus = this.board.mode === 'speed' ? 2 : 1;
-    const points = baseScore * comboBonus * speedBonus;
+    const diffMod = DIFFICULTIES.find(d => d.id === this.board!.difficulty)?.scoreMod ?? 1;
+    const points = Math.round(baseScore * comboBonus * speedBonus * diffMod);
     this.board.score += points;
     this.board.matchCount++;
     this.board.undoStack.push([a.idx, b.idx]);
@@ -560,7 +587,10 @@ export class GameState {
     this.checkAchievement('cross_win', this.stats.layoutWins.has('cross'));
     this.checkAchievement('diamond_win', this.stats.layoutWins.has('diamond'));
     this.checkAchievement('spiral_win', this.stats.layoutWins.has('spiral'));
+    this.checkAchievement('butterfly_win', this.stats.layoutWins.has('butterfly'));
+    this.checkAchievement('turtle_win', this.stats.layoutWins.has('turtle'));
     this.checkAchievement('all_layouts', this.stats.layoutWins.size >= LAYOUTS.length);
+    this.checkAchievement('all8_layouts', this.stats.layoutWins.size >= 8);
 
     // All modes achievement
     const allModes: GameMode[] = ['classic', 'timed', 'zen', 'daily', 'speed', 'practice', 'challenge'];
@@ -573,6 +603,42 @@ export class GameState {
     this.checkAchievement('level5', this.stats.level >= 5);
     this.checkAchievement('level10', this.stats.level >= 10);
     this.checkAchievement('level20', this.stats.level >= 20);
+
+    // Difficulty achievements
+    if (this.board.difficulty === 'hard') {
+      this.stats.hardWins++;
+      this.checkAchievement('hard_win', true);
+      this.checkAchievement('hard_no_hint', this.board.hintsUsed === 0);
+      this.checkAchievement('hard3', this.stats.hardWins >= 3);
+      this.checkAchievement('hard10', this.stats.hardWins >= 10);
+    }
+    if (this.board.difficulty === 'easy') {
+      this.checkAchievement('easy_win', true);
+    }
+
+    // Resume achievement
+    if (this.board.resumed) {
+      this.checkAchievement('resume_win', true);
+    }
+
+    // Tile clearing volume
+    this.checkAchievement('tiles500', this.stats.totalTilesCleared >= 500);
+    this.checkAchievement('tiles2000', this.stats.totalTilesCleared >= 2000);
+
+    // Per-mode stats
+    const modeKey = this.board.mode;
+    const ms = this.stats.perModeStats.get(modeKey) || { played: 0, won: 0, bestScore: 0 };
+    ms.played++;
+    ms.won++;
+    if (this.board.score > ms.bestScore) ms.bestScore = this.board.score;
+    this.stats.perModeStats.set(modeKey, ms);
+
+    // Per-layout stats
+    const lk = layoutName;
+    const ls = this.stats.perLayoutStats.get(lk) || { played: 0, won: 0 };
+    ls.played++;
+    ls.won++;
+    this.stats.perLayoutStats.set(lk, ls);
 
     this.saveStats();
     this.onGameOver?.(true);
@@ -661,6 +727,11 @@ export class GameState {
 
     this.board.elapsedTime += dt;
 
+    // Track total play time (in minutes)
+    this.stats.playTimeMinutes += dt / 60;
+    this.checkAchievement('playtime30', this.stats.playTimeMinutes >= 30);
+    this.checkAchievement('playtime120', this.stats.playTimeMinutes >= 120);
+
     const modeDef = GAME_MODES.find(m => m.id === this.board!.mode)!;
     const hasTimeLimit = modeDef.timeLimit > 0 || (this.board.challengeId && this.board.timeRemaining > 0);
     if (hasTimeLimit) {
@@ -684,6 +755,86 @@ export class GameState {
     this.stats.unlockedAchievements.add(id);
     this.onAchievement?.(id);
     this.saveStats();
+  }
+
+  // ── Save / Resume ─────────────────────────────────────────
+  saveGame(): boolean {
+    if (!this.board || this.board.gameOver) return false;
+    try {
+      const save = {
+        tiles: this.board.tiles.map(t => ({
+          idx: t.idx, typeId: t.typeId, col: t.col, row: t.row,
+          layer: t.layer, removed: t.removed,
+        })),
+        mode: this.board.mode,
+        layoutIdx: this.board.layoutIdx,
+        score: this.board.score,
+        combo: this.board.combo,
+        bestCombo: this.board.bestCombo,
+        matchCount: this.board.matchCount,
+        totalPairs: this.board.totalPairs,
+        hintsUsed: this.board.hintsUsed,
+        shufflesUsed: this.board.shufflesUsed,
+        elapsedTime: this.board.elapsedTime,
+        timeRemaining: this.board.timeRemaining,
+        challengeId: this.board.challengeId,
+        difficulty: this.board.difficulty,
+        undoStack: this.board.undoStack,
+      };
+      localStorage.setItem('neon-mahjong-save', JSON.stringify(save));
+      return true;
+    } catch { return false; }
+  }
+
+  hasSavedGame(): boolean {
+    return localStorage.getItem('neon-mahjong-save') !== null;
+  }
+
+  resumeGame(): boolean {
+    try {
+      const raw = localStorage.getItem('neon-mahjong-save');
+      if (!raw) return false;
+      const save = JSON.parse(raw);
+
+      const tiles: TileInstance[] = save.tiles.map((t: any) => ({
+        ...t, selected: false,
+      }));
+
+      this.board = {
+        tiles,
+        mode: save.mode,
+        layoutIdx: save.layoutIdx,
+        score: save.score,
+        combo: save.combo || 1,
+        bestCombo: save.bestCombo || 1,
+        matchCount: save.matchCount,
+        totalPairs: save.totalPairs,
+        hintsUsed: save.hintsUsed,
+        shufflesUsed: save.shufflesUsed,
+        elapsedTime: save.elapsedTime,
+        timeRemaining: save.timeRemaining,
+        gameOver: false,
+        won: false,
+        paused: false,
+        undoStack: save.undoStack || [],
+        challengeId: save.challengeId || null,
+        firstMatchDone: true,
+        autoCompleted: false,
+        difficulty: save.difficulty || 'normal',
+        resumed: true,
+      };
+
+      this.currentLayoutIdx = save.layoutIdx;
+      localStorage.removeItem('neon-mahjong-save');
+      return true;
+    } catch {
+      localStorage.removeItem('neon-mahjong-save');
+      return false;
+    }
+  }
+
+  clearSavedGame(): void {
+    localStorage.removeItem('neon-mahjong-save');
   }
 
   // Theme tracking

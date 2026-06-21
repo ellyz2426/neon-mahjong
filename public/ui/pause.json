@@ -18,6 +18,20 @@
         "dataUid": "uid-2"
       },
       {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "Normal"
+        ],
+        "properties": {
+          "name": "pause-diff",
+          "fontsize": "12",
+          "color": "#ffaa0088",
+          "textalign": "center"
+        },
+        "dataUid": "uid-3"
+      },
+      {
         "sourceTag": "container",
         "type": "custom",
         "children": [
@@ -38,7 +52,7 @@
               "bordercolor": "#ffaa00",
               "borderradius": "4"
             },
-            "dataUid": "uid-4"
+            "dataUid": "uid-5"
           },
           {
             "sourceTag": "text",
@@ -57,7 +71,7 @@
               "bordercolor": "#00ff88",
               "borderradius": "4"
             },
-            "dataUid": "uid-5"
+            "dataUid": "uid-6"
           },
           {
             "sourceTag": "text",
@@ -76,7 +90,7 @@
               "bordercolor": "#ff00ff",
               "borderradius": "4"
             },
-            "dataUid": "uid-6"
+            "dataUid": "uid-7"
           },
           {
             "sourceTag": "text",
@@ -95,7 +109,26 @@
               "bordercolor": "#00ccff",
               "borderradius": "4"
             },
-            "dataUid": "uid-7"
+            "dataUid": "uid-8"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "SAVE & QUIT"
+            ],
+            "properties": {
+              "name": "btn-save-quit",
+              "fontsize": "16",
+              "color": "#ffaa00",
+              "textalign": "center",
+              "backgroundcolor": "#1a1100",
+              "padding": "8",
+              "borderwidth": "1",
+              "bordercolor": "#ffaa00",
+              "borderradius": "4"
+            },
+            "dataUid": "uid-9"
           },
           {
             "sourceTag": "text",
@@ -114,7 +147,7 @@
               "bordercolor": "#ff4444",
               "borderradius": "4"
             },
-            "dataUid": "uid-8"
+            "dataUid": "uid-10"
           }
         ],
         "properties": {
@@ -122,7 +155,7 @@
           "gap": "8",
           "width": "100%"
         },
-        "dataUid": "uid-3"
+        "dataUid": "uid-4"
       }
     ],
     "properties": {
@@ -147,7 +180,7 @@
         "column": 0
       },
       "end": {
-        "line": 9,
+        "line": 11,
         "column": 12
       }
     },
@@ -167,18 +200,18 @@
         "column": 2
       },
       "end": {
-        "line": 8,
-        "column": 14
+        "line": 2,
+        "column": 90
       }
     },
     "uid-4": {
       "start": {
         "line": 3,
-        "column": 4
+        "column": 2
       },
       "end": {
-        "line": 3,
-        "column": 184
+        "line": 10,
+        "column": 14
       }
     },
     "uid-5": {
@@ -188,7 +221,7 @@
       },
       "end": {
         "line": 4,
-        "column": 179
+        "column": 184
       }
     },
     "uid-6": {
@@ -198,7 +231,7 @@
       },
       "end": {
         "line": 5,
-        "column": 185
+        "column": 179
       }
     },
     "uid-7": {
@@ -208,7 +241,7 @@
       },
       "end": {
         "line": 6,
-        "column": 196
+        "column": 185
       }
     },
     "uid-8": {
@@ -218,6 +251,26 @@
       },
       "end": {
         "line": 7,
+        "column": 196
+      }
+    },
+    "uid-9": {
+      "start": {
+        "line": 8,
+        "column": 4
+      },
+      "end": {
+        "line": 8,
+        "column": 195
+      }
+    },
+    "uid-10": {
+      "start": {
+        "line": 9,
+        "column": 4
+      },
+      "end": {
+        "line": 9,
         "column": 179
       }
     }

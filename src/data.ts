@@ -225,6 +225,126 @@ function makeCross(): TilePosition[] {
   return pos.slice(0, 144);
 }
 
+// ── NEW LAYOUT: Butterfly ───────────────────────────────────
+function makeButterfly(): TilePosition[] {
+  const pos: TilePosition[] = [];
+  // Layer 0: two wings (left and right halves) with a central spine
+  // Left wing
+  for (let r = 0; r < 8; r++) {
+    const dist = Math.abs(r - 3.5);
+    const width = Math.max(1, Math.round(5 - dist));
+    for (let c = 0; c < width; c++) {
+      pos.push({ col: c, row: r, layer: 0 });
+    }
+  }
+  // Right wing (mirrored)
+  for (let r = 0; r < 8; r++) {
+    const dist = Math.abs(r - 3.5);
+    const width = Math.max(1, Math.round(5 - dist));
+    for (let c = 0; c < width; c++) {
+      pos.push({ col: 11 - c, row: r, layer: 0 });
+    }
+  }
+  // Spine (center column)
+  for (let r = 0; r < 8; r++) {
+    pos.push({ col: 5, row: r, layer: 0 });
+    pos.push({ col: 6, row: r, layer: 0 });
+  }
+  // Remove duplicates
+  const seen = new Set<string>();
+  const unique: TilePosition[] = [];
+  for (const p of pos) {
+    const k = `${p.col},${p.row},${p.layer}`;
+    if (!seen.has(k)) { seen.add(k); unique.push(p); }
+  }
+  // Layer 1: center 6x4
+  for (let r = 2; r < 6; r++) {
+    for (let c = 3; c < 9; c++) {
+      unique.push({ col: c, row: r, layer: 1 });
+    }
+  }
+  // Layer 2: center 4x2
+  for (let r = 3; r < 5; r++) {
+    for (let c = 4; c < 8; c++) {
+      unique.push({ col: c, row: r, layer: 2 });
+    }
+  }
+  // Layer 3: center 2x2
+  for (let r = 3; r < 5; r++) {
+    for (let c = 5; c < 7; c++) {
+      unique.push({ col: c, row: r, layer: 3 });
+    }
+  }
+  // Pad to 144
+  const wingExtras: [number,number][] = [
+    [-1,3],[-1,4],[12,3],[12,4],
+    [0,-1],[11,-1],[0,8],[11,8],
+    [1,-1],[10,-1],[1,8],[10,8],
+  ];
+  for (const [c,r] of wingExtras) {
+    if (unique.length >= 144) break;
+    unique.push({ col: c, row: r, layer: 0 });
+  }
+  return unique.slice(0, 144);
+}
+
+// ── NEW LAYOUT: Turtle ──────────────────────────────────────
+function makeTurtle(): TilePosition[] {
+  const pos: TilePosition[] = [];
+  // Layer 0: oval shell 10x6 = 60
+  for (let r = 0; r < 6; r++) {
+    let cStart = 0, cEnd = 9;
+    if (r === 0 || r === 5) { cStart = 2; cEnd = 7; }
+    else if (r === 1 || r === 4) { cStart = 1; cEnd = 8; }
+    for (let c = cStart; c <= cEnd; c++) {
+      pos.push({ col: c, row: r, layer: 0 });
+    }
+  }
+  // Head: 2 tiles extending from top
+  pos.push({ col: 4, row: -1, layer: 0 });
+  pos.push({ col: 5, row: -1, layer: 0 });
+  // Tail: 2 tiles extending from bottom
+  pos.push({ col: 4, row: 6, layer: 0 });
+  pos.push({ col: 5, row: 6, layer: 0 });
+  // Legs: 4 corners
+  pos.push({ col: 0, row: -1, layer: 0 });
+  pos.push({ col: 9, row: -1, layer: 0 });
+  pos.push({ col: 0, row: 6, layer: 0 });
+  pos.push({ col: 9, row: 6, layer: 0 });
+
+  // Layer 1: inner shell 8x4 = 32
+  for (let r = 1; r < 5; r++) {
+    for (let c = 1; c < 9; c++) {
+      pos.push({ col: c, row: r, layer: 1 });
+    }
+  }
+  // Layer 2: 6x4 = 24
+  for (let r = 1; r < 5; r++) {
+    for (let c = 2; c < 8; c++) {
+      pos.push({ col: c, row: r, layer: 2 });
+    }
+  }
+  // Layer 3: 4x2 = 8
+  for (let r = 2; r < 4; r++) {
+    for (let c = 3; c < 7; c++) {
+      pos.push({ col: c, row: r, layer: 3 });
+    }
+  }
+  // Layer 4: 2x2 = 4
+  for (let r = 2; r < 4; r++) {
+    for (let c = 4; c < 6; c++) {
+      pos.push({ col: c, row: r, layer: 4 });
+    }
+  }
+  // Layer 5: cap
+  pos.push({ col: 4, row: 2, layer: 5 });
+  pos.push({ col: 5, row: 2, layer: 5 });
+  pos.push({ col: 4, row: 3, layer: 5 });
+  pos.push({ col: 5, row: 3, layer: 5 });
+
+  return pos.slice(0, 144);
+}
+
 // ── NEW LAYOUT: Diamond ─────────────────────────────────────
 function makeDiamond(): TilePosition[] {
   const pos: TilePosition[] = [];
@@ -375,6 +495,8 @@ export const LAYOUTS: LayoutDef[] = [
   { name: 'Cross', description: 'Wide spread', generate: makeCross },
   { name: 'Diamond', description: 'Concentric', generate: makeDiamond },
   { name: 'Spiral', description: 'Layered ring', generate: makeSpiral },
+  { name: 'Butterfly', description: 'Twin wings', generate: makeButterfly },
+  { name: 'Turtle', description: 'Shell stack', generate: makeTurtle },
 ];
 
 // ── Game Modes ──────────────────────────────────────────────
@@ -545,4 +667,19 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'all_modes', name: 'Versatile', desc: 'Win in every mode' },
   { id: 'hard_win', name: 'Iron Will', desc: 'Win on Hard difficulty' },
   { id: 'hard_no_hint', name: 'Fearless', desc: 'Hard win with no hints' },
+  // New layout achievements
+  { id: 'butterfly_win', name: 'Butterfly Wings', desc: 'Win on Butterfly' },
+  { id: 'turtle_win', name: 'Turtle Shell', desc: 'Win on Turtle' },
+  // Difficulty achievements
+  { id: 'easy_win', name: 'Gentle Start', desc: 'Win on Easy' },
+  { id: 'hard3', name: 'Hardened', desc: '3 Hard wins' },
+  { id: 'hard10', name: 'Unyielding', desc: '10 Hard wins' },
+  // Save/resume
+  { id: 'resume_win', name: 'Comeback', desc: 'Win a resumed game' },
+  // Variety
+  { id: 'all8_layouts', name: 'Explorer', desc: 'Win on all 8 layouts' },
+  { id: 'tiles500', name: 'Tile Collector', desc: 'Clear 500 total tiles' },
+  { id: 'tiles2000', name: 'Tile Hoarder', desc: 'Clear 2000 total tiles' },
+  { id: 'playtime30', name: 'Dedicated Player', desc: 'Play 30 min total' },
+  { id: 'playtime120', name: 'Marathon Player', desc: 'Play 2 hours total' },
 ];

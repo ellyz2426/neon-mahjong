@@ -127,9 +127,20 @@ export class AudioManager {
   }
 
   // ── Ambient music ─────────────────────────────────────────
+  private musicChordIdx = 0;
+  private static CHORD_PROGRESSION = [
+    [130.81, 164.81, 196.00, 246.94], // C3 major
+    [110.00, 138.59, 164.81, 220.00], // Am
+    [146.83, 174.61, 220.00, 293.66], // Dm
+    [130.81, 164.81, 196.00, 261.63], // C3 (higher voicing)
+    [116.54, 146.83, 174.61, 233.08], // Bb
+    [98.00, 123.47, 146.83, 196.00],  // G (lower)
+  ];
+
   startMusic(): void {
     if (!this.ensureCtx() || this.musicPlaying) return;
     this.musicPlaying = true;
+    this.musicChordIdx = 0;
     this.playAmbientLoop();
   }
 
@@ -144,24 +155,43 @@ export class AudioManager {
   private playAmbientLoop(): void {
     if (!this.musicPlaying || !this.ctx || !this.musicGain) return;
 
-    // Simple ambient chord drone
-    const notes = [130.81, 164.81, 196.00, 246.94]; // C3 chord
+    const chords = AudioManager.CHORD_PROGRESSION;
+    const notes = chords[this.musicChordIdx % chords.length];
+    this.musicChordIdx++;
+
+    // Each chord plays for ~5s with volume envelope
     for (const freq of notes) {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'sine';
       osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.15, this.ctx.currentTime + 2);
-      gain.gain.linearRampToValueAtTime(0.08, this.ctx.currentTime + 4);
-      gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 6);
+      gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.12, this.ctx.currentTime + 1.5);
+      gain.gain.linearRampToValueAtTime(0.08, this.ctx.currentTime + 3.5);
+      gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 5);
       osc.connect(gain);
       gain.connect(this.musicGain);
       osc.start();
-      osc.stop(this.ctx.currentTime + 6);
+      osc.stop(this.ctx.currentTime + 5);
+    }
+
+    // Add subtle high pad on every other chord
+    if (this.musicChordIdx % 2 === 0) {
+      const padFreq = notes[notes.length - 1] * 2;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = padFreq;
+      gain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.04, this.ctx.currentTime + 2);
+      gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 5);
+      osc.connect(gain);
+      gain.connect(this.musicGain);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 5);
     }
 
     // Loop
-    setTimeout(() => this.playAmbientLoop(), 5500);
+    setTimeout(() => this.playAmbientLoop(), 4500);
   }
 }
