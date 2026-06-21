@@ -1,4 +1,4 @@
-// Neon Mahjong VR - 3D Tile Renderer
+// Neon Mahjong VR - 3D Tile Renderer (Extended)
 
 import {
   World,
@@ -87,13 +87,16 @@ export class TileRenderer {
   private state: GameState;
   private boardGroup: Group;
   private tileMeshes: Map<number, Mesh> = new Map();
-  private selectedGlowMesh: Mesh | null = null;
-  private hintMeshes: [Mesh, Mesh] | null = null;
+  private tilePositions: Map<number, Vector3> = new Map(); // World positions for particles
   private currentTheme: ThemeDef;
   private raycaster: Raycaster;
   private floorGrid: GridHelper | null = null;
   private ambientLight: AmbientLight | null = null;
   private pointLights: PointLight[] = [];
+
+  // Board centering offsets
+  private centerX = 0;
+  private centerY = 0;
 
   constructor(world: World, state: GameState) {
     this.world = world;
@@ -154,18 +157,27 @@ export class TileRenderer {
       if (t.row < minR) minR = t.row;
       if (t.row > maxR) maxR = t.row;
     }
-    const centerX = (minC + maxC) / 2;
-    const centerY = (minR + maxR) / 2;
+    this.centerX = (minC + maxC) / 2;
+    this.centerY = (minR + maxR) / 2;
 
     for (const tile of tiles) {
       const mesh = this.createTileMesh(tile);
-      const x = (tile.col - centerX) * (TILE_W + TILE_GAP);
+      const x = (tile.col - this.centerX) * (TILE_W + TILE_GAP);
       const y = tile.layer * LAYER_OFFSET;
-      const z = -(tile.row - centerY) * (TILE_H + TILE_GAP);
+      const z = -(tile.row - this.centerY) * (TILE_H + TILE_GAP);
       mesh.position.set(x, y, z);
       mesh.userData['tileIdx'] = tile.idx;
       this.boardGroup.add(mesh);
       this.tileMeshes.set(tile.idx, mesh);
+
+      // Cache world position for particles
+      const worldPos = new Vector3();
+      mesh.getWorldPosition(worldPos);
+      this.tilePositions.set(tile.idx, new Vector3(
+        this.boardGroup.position.x + x,
+        this.boardGroup.position.y + y,
+        this.boardGroup.position.z + z,
+      ));
     }
   }
 
@@ -176,7 +188,6 @@ export class TileRenderer {
     const edgeColor = new Color(this.currentTheme.tileEdge);
     const baseColor = new Color(this.currentTheme.tileBase);
 
-    // Top face: textured. Other faces: base color
     const topMat = new MeshStandardMaterial({
       map: texture,
       emissive: edgeColor,
@@ -197,9 +208,7 @@ export class TileRenderer {
       metalness: 0.1,
     });
 
-    // Box: [+x, -x, +y, -y, +z, -z]
     const materials = [sideMat, sideMat, topMat, bottomMat, sideMat, sideMat];
-
     const geo = new BoxGeometry(TILE_W, TILE_D, TILE_H);
     const mesh = new Mesh(geo, materials);
     mesh.castShadow = true;
@@ -219,6 +228,16 @@ export class TileRenderer {
       }
     }
     this.tileMeshes.clear();
+    this.tilePositions.clear();
+  }
+
+  // ── Public accessors for particles ────────────────────────
+  getTileWorldPos(idx: number): Vector3 | null {
+    return this.tilePositions.get(idx) || null;
+  }
+
+  getThemeEdgeColor(): number {
+    return this.currentTheme.tileEdge;
   }
 
   // ── Tile Updates ──────────────────────────────────────────
@@ -226,21 +245,18 @@ export class TileRenderer {
     const mesh = this.tileMeshes.get(idx);
     if (!mesh) return;
 
-    // Animate removal (scale down + fade)
-    const startScale = mesh.scale.clone();
     const startY = mesh.position.y;
     const duration = 400;
     const start = performance.now();
 
     const animate = () => {
       const t = Math.min((performance.now() - start) / duration, 1);
-      const ease = 1 - (1 - t) * (1 - t); // ease-out quad
+      const ease = 1 - (1 - t) * (1 - t);
 
       mesh.scale.setScalar(1 - ease);
       mesh.position.y = startY + ease * 0.2;
       mesh.rotation.y = ease * Math.PI;
 
-      // Fade materials
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const m of mats) {
         if (m instanceof MeshStandardMaterial) {
@@ -266,7 +282,6 @@ export class TileRenderer {
     const mesh = this.tileMeshes.get(idx);
     if (!mesh) return;
 
-    // Update texture for shuffle
     const tileType = TILE_TYPES[tile.typeId];
     const texture = createTileTexture(tileType.label, tileType.color, tileType.suit);
     const mats = mesh.material as MeshStandardMaterial[];
@@ -293,7 +308,6 @@ export class TileRenderer {
       }
     }
 
-    // Scale feedback
     mesh.scale.setScalar(selected ? 1.1 : 1.0);
   }
 
@@ -346,14 +360,12 @@ export class TileRenderer {
       this.ambientLight.color = new Color(this.currentTheme.ambientColor);
     }
     if (this.floorGrid) {
-      // Recreate grid
       scene.remove(this.floorGrid);
       this.floorGrid = new GridHelper(20, 40, this.currentTheme.gridColor, this.currentTheme.gridColor);
       this.floorGrid.position.y = -0.05;
       scene.add(this.floorGrid);
     }
 
-    // Rebuild tile textures with new theme
     textureCache.clear();
     if (this.state.board) {
       this.buildBoard();

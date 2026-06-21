@@ -1,22 +1,27 @@
-// Neon Mahjong VR - Main Game System
+// Neon Mahjong VR - Main Game System (Extended)
 
 import {
   createSystem,
   InputComponent,
+  Vector3,
 } from '@iwsdk/core';
 import { GameState } from '../state';
 import { TileRenderer } from '../renderer';
 import { AudioManager } from '../audio';
-import { LAYOUTS, GAME_MODES, type GameMode } from '../data';
+import { ParticleSystem } from '../particles';
+import { ScorePopupSystem } from '../score-popup';
+import { LAYOUTS, GAME_MODES, CHALLENGES, type GameMode, type ChallengeDef } from '../data';
 
 export type GameScreen = 'title' | 'modeselect' | 'layoutselect' | 'countdown'
   | 'playing' | 'pause' | 'gameover' | 'achievements' | 'stats'
-  | 'settings' | 'skins' | 'help' | 'leaderboard' | 'tutorial';
+  | 'settings' | 'skins' | 'help' | 'leaderboard' | 'tutorial' | 'challengeselect';
 
 export class GameSystem extends createSystem({}) {
   private _state!: GameState;
   private _renderer!: TileRenderer;
   private _audio!: AudioManager;
+  private _particles!: ParticleSystem;
+  private _scorePopups!: ScorePopupSystem;
 
   _screen: GameScreen = 'title';
   private _onScreenChange: ((screen: GameScreen) => void) | null = null;
@@ -36,7 +41,12 @@ export class GameSystem extends createSystem({}) {
   // Pending game start
   private pendingMode: GameMode = 'classic';
   private pendingLayout = 0;
+  private pendingChallengeId: string | null = null;
   private showTutorial = false;
+
+  // Auto-complete
+  private autoCompleteAvailable = false;
+  private onAutoCompleteReady: (() => void) | null = null;
 
   setRefs(refs: {
     state: GameState;
@@ -47,12 +57,27 @@ export class GameSystem extends createSystem({}) {
     this._renderer = refs.tileRenderer;
     this._audio = refs.audio;
 
+    // Create particle and score popup systems
+    this._particles = new ParticleSystem(this.world.scene);
+    this._scorePopups = new ScorePopupSystem(this.world.scene);
+
     // Wire state callbacks
-    this._state.onMatch = (a, b) => {
+    this._state.onMatch = (a, b, score) => {
       this._renderer.removeTile(a.idx);
       this._renderer.removeTile(b.idx);
       this._audio.playMatch();
       this.clearHints();
+
+      // Particle effects at match position
+      const posA = this._renderer.getTileWorldPos(a.idx);
+      const posB = this._renderer.getTileWorldPos(b.idx);
+      if (posA) {
+        this._particles.emitBurst(posA, 12, this._renderer.getThemeEdgeColor());
+        this._scorePopups.show(posA.x, posA.y + 0.15, posA.z, `+${score}`, '#00ffff');
+      }
+      if (posB) {
+        this._particles.emitBurst(posB, 12, this._renderer.getThemeEdgeColor());
+      }
     };
     this._state.onSelect = (t) => {
       this._renderer.setTileSelected(t.idx, true);
@@ -68,20 +93,39 @@ export class GameSystem extends createSystem({}) {
     };
     this._state.onCombo = (combo) => {
       this._audio.playCombo(combo);
+      // Combo particle burst at board center
+      const center = new Vector3(0, 1.2, -1.5);
+      this._particles.emitCombo(center, combo);
     };
     this._state.onShuffle = () => {
       this._renderer.refreshAllTiles();
       this._audio.playShuffle();
     };
     this._state.onGameOver = (won) => {
-      if (won) this._audio.playWin();
-      else this._audio.playLose();
+      if (won) {
+        this._audio.playWin();
+        // Win celebration particles
+        for (let i = 0; i < 5; i++) {
+          setTimeout(() => {
+            const x = (Math.random() - 0.5) * 1.5;
+            const pos = new Vector3(x, 1.0 + Math.random() * 0.5, -1.5);
+            this._particles.emitCombo(pos, 8);
+          }, i * 200);
+        }
+      } else {
+        this._audio.playLose();
+      }
       this._audio.stopMusic();
+      this.autoCompleteAvailable = false;
       this._screen = 'gameover';
       this._onScreenChange?.('gameover');
     };
     this._state.onAchievement = (_id) => {
       this._audio.playAchievement();
+    };
+    this._state.onAutoComplete = () => {
+      this.autoCompleteAvailable = true;
+      this.onAutoCompleteReady?.();
     };
 
     // Mouse input for tile selection
@@ -112,6 +156,10 @@ export class GameSystem extends createSystem({}) {
     this._onScreenChange = cb;
   }
 
+  setAutoCompleteReadyCallback(cb: () => void): void {
+    this.onAutoCompleteReady = cb;
+  }
+
   // ── Screen Management ─────────────────────────────────────
   goTo(screen: GameScreen): void {
     this._screen = screen;
@@ -121,6 +169,17 @@ export class GameSystem extends createSystem({}) {
   // ── Game Flow ─────────────────────────────────────────────
   startGameSetup(mode: GameMode): void {
     this.pendingMode = mode;
+    this.pendingChallengeId = null;
+    if (mode === 'challenge') {
+      this.goTo('challengeselect');
+    } else {
+      this.goTo('layoutselect');
+    }
+  }
+
+  startChallengeSetup(challengeId: string): void {
+    this.pendingMode = 'challenge';
+    this.pendingChallengeId = challengeId;
     this.goTo('layoutselect');
   }
 
@@ -143,10 +202,18 @@ export class GameSystem extends createSystem({}) {
   }
 
   startGame(): void {
-    this._state.startGame(this.pendingMode, this.pendingLayout);
+    this._state.startGame(this.pendingMode, this.pendingLayout, this.pendingChallengeId);
     this._renderer.buildBoard();
     this._audio.startMusic();
+    this.autoCompleteAvailable = false;
     this.goTo('playing');
+  }
+
+  triggerAutoComplete(): void {
+    if (this.autoCompleteAvailable && this._state.board && !this._state.board.gameOver) {
+      this.autoCompleteAvailable = false;
+      this._state.autoComplete();
+    }
   }
 
   getCountdownValue(): number {
@@ -165,6 +232,10 @@ export class GameSystem extends createSystem({}) {
     return this._audio;
   }
 
+  isAutoCompleteAvailable(): boolean {
+    return this.autoCompleteAvailable;
+  }
+
   // ── Input ─────────────────────────────────────────────────
   private handleKeyDown(key: string): void {
     if (this._screen === 'playing') {
@@ -177,6 +248,8 @@ export class GameSystem extends createSystem({}) {
       } else if (key === 'z') {
         this._state.undo();
         this._renderer.buildBoard();
+      } else if (key === 'a' && this.autoCompleteAvailable) {
+        this.triggerAutoComplete();
       }
     } else if (this._screen === 'pause') {
       if (key === 'escape' || key === 'p') {
@@ -260,6 +333,10 @@ export class GameSystem extends createSystem({}) {
         }
       }
     }
+
+    // Update particles and score popups
+    this._particles.update(dt);
+    this._scorePopups.update(dt);
   }
 
   private handleXRInput(): void {
@@ -298,12 +375,20 @@ export class GameSystem extends createSystem({}) {
       }
     }
 
-    // Left grip = shuffle
+    // Left pad
     const leftPad = inputMgr.xr.gamepads.left;
     if (leftPad) {
+      // Left A = shuffle
       if (leftPad.getButtonDown(InputComponent.A_Button) && this.inputCooldown <= 0) {
         this.requestShuffle();
         this.inputCooldown = 0.3;
+      }
+      // Left B = auto-complete (when available)
+      if (leftPad.getButtonDown(InputComponent.B_Button) && this.inputCooldown <= 0) {
+        if (this.autoCompleteAvailable) {
+          this.triggerAutoComplete();
+          this.inputCooldown = 0.3;
+        }
       }
     }
   }

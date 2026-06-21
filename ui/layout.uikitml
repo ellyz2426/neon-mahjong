@@ -1,10 +1,12 @@
 <container name="layout-panel" flexDirection="column" gap="8" padding="16" backgroundColor="#000a15ee" borderWidth="2" borderColor="#00ffff" borderRadius="8" width="420" alignItems="center">
   <text fontSize="24" fontWeight="bold" color="#00ffff" textAlign="center">SELECT LAYOUT</text>
   <container flexDirection="column" gap="6" width="100%">
-    <text name="btn-fortress" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="8" borderWidth="1" borderColor="#00ffff" borderRadius="4">Fortress - 5 layers</text>
+    <text name="btn-fortress" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="8" borderWidth="1" borderColor="#00ffff" borderRadius="4">Fortress - 6 layers</text>
     <text name="btn-pyramid" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="8" borderWidth="1" borderColor="#00ffff" borderRadius="4">Pyramid - Wide base</text>
     <text name="btn-tower" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="8" borderWidth="1" borderColor="#00ffff" borderRadius="4">Tower - Deep stack</text>
     <text name="btn-cross" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="8" borderWidth="1" borderColor="#00ffff" borderRadius="4">Cross - Wide spread</text>
+    <text name="btn-diamond" fontSize="16" color="#ff88ff" textAlign="center" backgroundColor="#1a0028" padding="8" borderWidth="1" borderColor="#ff88ff" borderRadius="4">Diamond - Concentric</text>
+    <text name="btn-spiral" fontSize="16" color="#00ff88" textAlign="center" backgroundColor="#001a0a" padding="8" borderWidth="1" borderColor="#00ff88" borderRadius="4">Spiral - Layered ring</text>
   </container>
   <text name="btn-layout-back" fontSize="14" color="#888888" textAlign="center" padding="6">BACK</text>
 </container>

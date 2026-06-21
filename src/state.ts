@@ -1,9 +1,9 @@
-// Neon Mahjong VR - Game State Manager
+// Neon Mahjong VR - Game State Manager (Extended)
 
 import {
   type TileType, TILE_TYPES, type TilePosition,
-  type GameMode, GAME_MODES, LAYOUTS, ACHIEVEMENTS,
-  type ThemeDef, THEMES, generateTileSet,
+  type GameMode, GAME_MODES, LAYOUTS, ACHIEVEMENTS, CHALLENGES,
+  type ThemeDef, THEMES, generateTileSet, type ChallengeDef,
 } from './data';
 
 // ── Tile Instance ───────────────────────────────────────────
@@ -36,6 +36,10 @@ export interface PlayerStats {
   themesUsed: Set<string>;
   unlockedAchievements: Set<string>;
   leaderboard: { score: number; mode: string; date: string }[];
+  winStreak: number;
+  bestWinStreak: number;
+  modesWon: Set<string>;
+  challengesCompleted: Set<string>;
 }
 
 // ── Board State ─────────────────────────────────────────────
@@ -56,6 +60,9 @@ export interface BoardState {
   won: boolean;
   paused: boolean;
   undoStack: [number, number][]; // pairs of tile indices for undo
+  challengeId: string | null;
+  firstMatchDone: boolean;
+  autoCompleted: boolean;
 }
 
 // ── Seeded random for daily puzzles ─────────────────────────
@@ -83,7 +90,7 @@ export class GameState {
   currentLayoutIdx = 0;
 
   // Callbacks
-  onMatch: ((a: TileInstance, b: TileInstance) => void) | null = null;
+  onMatch: ((a: TileInstance, b: TileInstance, score: number) => void) | null = null;
   onSelect: ((t: TileInstance) => void) | null = null;
   onDeselect: (() => void) | null = null;
   onGameOver: ((won: boolean) => void) | null = null;
@@ -92,6 +99,7 @@ export class GameState {
   onCombo: ((combo: number) => void) | null = null;
   onShuffle: (() => void) | null = null;
   onTimerUpdate: ((time: number) => void) | null = null;
+  onAutoComplete: (() => void) | null = null;
 
   private lastMatchTime = 0;
   private comboTimeout = 3000; // ms
@@ -112,6 +120,10 @@ export class GameState {
           themesUsed: new Set(d.themesUsed || []),
           unlockedAchievements: new Set(d.unlockedAchievements || []),
           leaderboard: d.leaderboard || [],
+          winStreak: d.winStreak || 0,
+          bestWinStreak: d.bestWinStreak || 0,
+          modesWon: new Set(d.modesWon || []),
+          challengesCompleted: new Set(d.challengesCompleted || []),
         };
       }
     } catch { /* ignore */ }
@@ -121,6 +133,8 @@ export class GameState {
       totalTilesCleared: 0, playTimeMinutes: 0, xp: 0, level: 1,
       dailyWins: 0, layoutWins: new Set(), themesUsed: new Set(),
       unlockedAchievements: new Set(), leaderboard: [],
+      winStreak: 0, bestWinStreak: 0, modesWon: new Set(),
+      challengesCompleted: new Set(),
     };
   }
 
@@ -131,13 +145,15 @@ export class GameState {
         layoutWins: [...this.stats.layoutWins],
         themesUsed: [...this.stats.themesUsed],
         unlockedAchievements: [...this.stats.unlockedAchievements],
+        modesWon: [...this.stats.modesWon],
+        challengesCompleted: [...this.stats.challengesCompleted],
       };
       localStorage.setItem('neon-mahjong-stats', JSON.stringify(d));
     } catch { /* ignore */ }
   }
 
   // ── Board Generation ──────────────────────────────────────
-  startGame(mode: GameMode, layoutIdx: number): void {
+  startGame(mode: GameMode, layoutIdx: number, challengeId: string | null = null): void {
     const positions = LAYOUTS[layoutIdx].generate();
     const tileTypeIds = generateTileSet();
 
@@ -165,6 +181,13 @@ export class GameState {
 
     const modeDef = GAME_MODES.find(m => m.id === mode)!;
 
+    // Apply challenge overrides
+    let timeLimit = modeDef.timeLimit;
+    if (challengeId) {
+      const ch = CHALLENGES.find(c => c.id === challengeId);
+      if (ch && ch.timeLimit > 0) timeLimit = ch.timeLimit;
+    }
+
     this.board = {
       tiles,
       mode,
@@ -177,11 +200,14 @@ export class GameState {
       hintsUsed: 0,
       shufflesUsed: 0,
       elapsedTime: 0,
-      timeRemaining: modeDef.timeLimit,
+      timeRemaining: timeLimit,
       gameOver: false,
       won: false,
       paused: false,
       undoStack: [],
+      challengeId,
+      firstMatchDone: false,
+      autoCompleted: false,
     };
 
     this.lastMatchTime = 0;
@@ -191,6 +217,7 @@ export class GameState {
     this.checkAchievement('play10', this.stats.gamesPlayed >= 10);
     this.checkAchievement('play25', this.stats.gamesPlayed >= 25);
     this.checkAchievement('play50', this.stats.gamesPlayed >= 50);
+    this.checkAchievement('play100', this.stats.gamesPlayed >= 100);
     this.saveStats();
   }
 
@@ -199,7 +226,7 @@ export class GameState {
     if (tile.removed || !this.board) return false;
     const { tiles } = this.board;
 
-    // Check if anything is on top (same col, same row, higher layer)
+    // Check if anything is on top
     const hasOnTop = tiles.some(t =>
       !t.removed && t !== tile &&
       t.layer === tile.layer + 1 &&
@@ -276,6 +303,14 @@ export class GameState {
     a.selected = false;
     b.selected = false;
 
+    // Fast match check (within 2 sec of game start)
+    if (!this.board.firstMatchDone) {
+      this.board.firstMatchDone = true;
+      if (this.board.elapsedTime < 2) {
+        this.checkAchievement('fast_match', true);
+      }
+    }
+
     // Combo
     const now = performance.now();
     if (now - this.lastMatchTime < this.comboTimeout && this.lastMatchTime > 0) {
@@ -301,11 +336,16 @@ export class GameState {
     this.board.matchCount++;
     this.board.undoStack.push([a.idx, b.idx]);
 
+    // Score popup achievement
+    if (points >= 1000) {
+      this.checkAchievement('score_popup', true);
+    }
+
     // Stats
     this.stats.totalMatches++;
     this.stats.totalTilesCleared += 2;
 
-    this.onMatch?.(a, b);
+    this.onMatch?.(a, b, points);
     if (this.board.combo > 1) this.onCombo?.(this.board.combo);
 
     // Speed mode: add time
@@ -321,11 +361,78 @@ export class GameState {
     if (remaining.length === 0) {
       this.winGame();
     } else {
+      // Check if auto-complete available (6 or fewer tiles, all free, all matchable)
+      this.checkAutoComplete();
       // Check if any moves available
       this.checkStaleMate();
     }
 
     this.onBoardUpdate?.();
+  }
+
+  // ── Auto-Complete ─────────────────────────────────────────
+  private checkAutoComplete(): void {
+    if (!this.board || this.board.gameOver) return;
+    const remaining = this.board.tiles.filter(t => !t.removed);
+    if (remaining.length > 8 || remaining.length <= 0) return;
+
+    // All remaining must be free
+    const allFree = remaining.every(t => this.isTileFree(t));
+    if (!allFree) return;
+
+    // All must have a match
+    let allMatchable = true;
+    const used = new Set<number>();
+    for (let i = 0; i < remaining.length; i++) {
+      if (used.has(i)) continue;
+      let found = false;
+      for (let j = i + 1; j < remaining.length; j++) {
+        if (used.has(j)) continue;
+        if (this.canMatch(remaining[i], remaining[j])) {
+          used.add(i);
+          used.add(j);
+          found = true;
+          break;
+        }
+      }
+      if (!found) { allMatchable = false; break; }
+    }
+
+    if (allMatchable && used.size === remaining.length) {
+      this.onAutoComplete?.();
+    }
+  }
+
+  autoComplete(): void {
+    if (!this.board || this.board.gameOver) return;
+    const remaining = this.board.tiles.filter(t => !t.removed);
+    this.board.autoCompleted = true;
+    this.checkAchievement('auto_complete', true);
+
+    // Match all remaining pairs with a delay animation
+    const pairs: [TileInstance, TileInstance][] = [];
+    const used = new Set<number>();
+    for (let i = 0; i < remaining.length; i++) {
+      if (used.has(remaining[i].idx)) continue;
+      for (let j = i + 1; j < remaining.length; j++) {
+        if (used.has(remaining[j].idx)) continue;
+        if (this.canMatch(remaining[i], remaining[j])) {
+          pairs.push([remaining[i], remaining[j]]);
+          used.add(remaining[i].idx);
+          used.add(remaining[j].idx);
+          break;
+        }
+      }
+    }
+
+    // Execute each pair with slight delay
+    pairs.forEach((pair, index) => {
+      setTimeout(() => {
+        if (this.board && !this.board.gameOver) {
+          this.executeMatch(pair[0], pair[1]);
+        }
+      }, index * 400);
+    });
   }
 
   undo(): boolean {
@@ -372,6 +479,15 @@ export class GameState {
       this.stats.fastestWin = this.board.elapsedTime;
     }
 
+    // Win streak
+    this.stats.winStreak++;
+    if (this.stats.winStreak > this.stats.bestWinStreak) {
+      this.stats.bestWinStreak = this.stats.winStreak;
+    }
+    this.checkAchievement('streak3', this.stats.winStreak >= 3);
+    this.checkAchievement('streak5', this.stats.winStreak >= 5);
+    this.checkAchievement('streak10', this.stats.winStreak >= 10);
+
     // XP
     const xpGain = Math.floor(this.board.score / 10) + 50;
     this.stats.xp += xpGain;
@@ -380,6 +496,9 @@ export class GameState {
     // Layout wins
     const layoutName = LAYOUTS[this.board.layoutIdx].name.toLowerCase();
     this.stats.layoutWins.add(layoutName);
+
+    // Modes won tracking
+    this.stats.modesWon.add(this.board.mode);
 
     // Leaderboard
     this.stats.leaderboard.push({
@@ -402,9 +521,15 @@ export class GameState {
     this.checkAchievement('win3', this.stats.gamesWon >= 3);
     this.checkAchievement('win10', this.stats.gamesWon >= 10);
     this.checkAchievement('win25', this.stats.gamesWon >= 25);
+    this.checkAchievement('win50', this.stats.gamesWon >= 50);
 
     // Mode achievements
-    if (this.board.mode === 'timed') this.checkAchievement('timed_win', true);
+    if (this.board.mode === 'timed') {
+      this.checkAchievement('timed_win', true);
+      if (this.board.timeRemaining >= 60) {
+        this.checkAchievement('perfect_timed', true);
+      }
+    }
     if (this.board.mode === 'speed') this.checkAchievement('speed_win', true);
     if (this.board.mode === 'daily') {
       this.checkAchievement('daily_win', true);
@@ -412,17 +537,42 @@ export class GameState {
       this.checkAchievement('daily3', this.stats.dailyWins >= 3);
     }
 
+    // Challenge completion
+    if (this.board.challengeId) {
+      const ch = CHALLENGES.find(c => c.id === this.board!.challengeId);
+      if (ch) {
+        const meetsScore = ch.targetScore === 0 || this.board.score >= ch.targetScore;
+        const meetsCombo = ch.minCombo === 0 || this.board.bestCombo >= ch.minCombo;
+        const meetsHints = ch.maxHints === -1 || this.board.hintsUsed <= ch.maxHints;
+        if (meetsScore && meetsCombo && meetsHints) {
+          this.stats.challengesCompleted.add(ch.id);
+          this.checkAchievement('challenge_win', true);
+          this.checkAchievement('challenge3', this.stats.challengesCompleted.size >= 3);
+          this.checkAchievement('challenge_all', this.stats.challengesCompleted.size >= CHALLENGES.length);
+        }
+      }
+    }
+
     // Layout achievements
     this.checkAchievement('fortress_win', this.stats.layoutWins.has('fortress'));
     this.checkAchievement('pyramid_win', this.stats.layoutWins.has('pyramid'));
     this.checkAchievement('tower_win', this.stats.layoutWins.has('tower'));
     this.checkAchievement('cross_win', this.stats.layoutWins.has('cross'));
-    this.checkAchievement('all_layouts', this.stats.layoutWins.size >= 4);
+    this.checkAchievement('diamond_win', this.stats.layoutWins.has('diamond'));
+    this.checkAchievement('spiral_win', this.stats.layoutWins.has('spiral'));
+    this.checkAchievement('all_layouts', this.stats.layoutWins.size >= LAYOUTS.length);
+
+    // All modes achievement
+    const allModes: GameMode[] = ['classic', 'timed', 'zen', 'daily', 'speed', 'practice', 'challenge'];
+    this.checkAchievement('all_modes', allModes.every(m => this.stats.modesWon.has(m)));
 
     // XP / level achievements
     this.checkAchievement('xp100', this.stats.xp >= 100);
+    this.checkAchievement('xp500', this.stats.xp >= 500);
+    this.checkAchievement('xp1000', this.stats.xp >= 1000);
     this.checkAchievement('level5', this.stats.level >= 5);
     this.checkAchievement('level10', this.stats.level >= 10);
+    this.checkAchievement('level20', this.stats.level >= 20);
 
     this.saveStats();
     this.onGameOver?.(true);
@@ -439,6 +589,7 @@ export class GameState {
     // No moves - game over (loss)
     this.board.gameOver = true;
     this.board.won = false;
+    this.stats.winStreak = 0; // Reset win streak on loss
     this.saveStats();
     this.onGameOver?.(false);
   }
@@ -460,7 +611,15 @@ export class GameState {
   useHint(): [number, number] | null {
     if (!this.board || this.board.gameOver) return null;
     const modeDef = GAME_MODES.find(m => m.id === this.board!.mode)!;
-    if (modeDef.hintsAllowed !== -1 && this.board.hintsUsed >= modeDef.hintsAllowed) return null;
+
+    // Check challenge hint limit
+    if (this.board.challengeId) {
+      const ch = CHALLENGES.find(c => c.id === this.board!.challengeId);
+      if (ch && ch.maxHints >= 0 && this.board.hintsUsed >= ch.maxHints) return null;
+    } else if (modeDef.hintsAllowed !== -1 && this.board.hintsUsed >= modeDef.hintsAllowed) {
+      return null;
+    }
+
     const hint = this.findHint();
     if (hint) {
       this.board.hintsUsed++;
@@ -503,12 +662,14 @@ export class GameState {
     this.board.elapsedTime += dt;
 
     const modeDef = GAME_MODES.find(m => m.id === this.board!.mode)!;
-    if (modeDef.timeLimit > 0) {
+    const hasTimeLimit = modeDef.timeLimit > 0 || (this.board.challengeId && this.board.timeRemaining > 0);
+    if (hasTimeLimit) {
       this.board.timeRemaining -= dt;
       if (this.board.timeRemaining <= 0) {
         this.board.timeRemaining = 0;
         this.board.gameOver = true;
         this.board.won = false;
+        this.stats.winStreak = 0;
         this.saveStats();
         this.onGameOver?.(false);
       }

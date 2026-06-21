@@ -63,6 +63,7 @@ function createPanels(world: World): void {
     { name: 'countdown', y: 1.4, visible: false },
     { name: 'toast', y: 2.1, visible: false },
     { name: 'tutorial', y: 1.1, visible: false },
+    { name: 'challenge', y: 1.1, visible: false },
   ];
 
   for (const cfg of panelConfigs) {

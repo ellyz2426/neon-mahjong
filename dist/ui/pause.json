@@ -82,6 +82,25 @@
             "sourceTag": "text",
             "type": "custom",
             "children": [
+              "AUTO-COMPLETE"
+            ],
+            "properties": {
+              "name": "btn-autocomplete",
+              "fontsize": "16",
+              "color": "#00ccff",
+              "textalign": "center",
+              "backgroundcolor": "#001a28",
+              "padding": "8",
+              "borderwidth": "1",
+              "bordercolor": "#00ccff",
+              "borderradius": "4"
+            },
+            "dataUid": "uid-7"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
               "QUIT"
             ],
             "properties": {
@@ -95,7 +114,7 @@
               "bordercolor": "#ff4444",
               "borderradius": "4"
             },
-            "dataUid": "uid-7"
+            "dataUid": "uid-8"
           }
         ],
         "properties": {
@@ -128,7 +147,7 @@
         "column": 0
       },
       "end": {
-        "line": 8,
+        "line": 9,
         "column": 12
       }
     },
@@ -148,7 +167,7 @@
         "column": 2
       },
       "end": {
-        "line": 7,
+        "line": 8,
         "column": 14
       }
     },
@@ -189,6 +208,16 @@
       },
       "end": {
         "line": 6,
+        "column": 196
+      }
+    },
+    "uid-8": {
+      "start": {
+        "line": 7,
+        "column": 4
+      },
+      "end": {
+        "line": 7,
         "column": 179
       }
     }

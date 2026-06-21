@@ -1,4 +1,4 @@
-// Neon Mahjong VR - UI System
+// Neon Mahjong VR - UI System (Extended)
 
 import {
   createSystem,
@@ -15,7 +15,7 @@ import { AudioManager } from '../audio';
 import { TileRenderer } from '../renderer';
 import {
   TILE_TYPES, THEMES, LAYOUTS, GAME_MODES,
-  ACHIEVEMENTS, type GameMode,
+  ACHIEVEMENTS, CHALLENGES, type GameMode,
 } from '../data';
 
 function setText(doc: UIKitDocument | undefined | null, id: string, text: string): void {
@@ -85,6 +85,10 @@ export class UISystem extends createSystem({
     required: [PanelUI, PanelDocument],
     where: [eq(PanelUI, 'config', './ui/tutorial.json')],
   },
+  challengePanel: {
+    required: [PanelUI, PanelDocument],
+    where: [eq(PanelUI, 'config', './ui/challenge.json')],
+  },
 }) {
   private _state!: GameState;
   private _gameSystem!: GameSystem;
@@ -107,6 +111,7 @@ export class UISystem extends createSystem({
   private cdDoc: UIKitDocument | null = null;
   private toastDoc: UIKitDocument | null = null;
   private tutDoc: UIKitDocument | null = null;
+  private challengeDoc: UIKitDocument | null = null;
 
   // Panel entities
   private titleEntity: import('@iwsdk/core').Entity | null = null;
@@ -124,6 +129,7 @@ export class UISystem extends createSystem({
   private cdEntity: import('@iwsdk/core').Entity | null = null;
   private toastEntity: import('@iwsdk/core').Entity | null = null;
   private tutEntity: import('@iwsdk/core').Entity | null = null;
+  private challengeEntity: import('@iwsdk/core').Entity | null = null;
 
   // State
   private achPage = 0;
@@ -164,6 +170,10 @@ export class UISystem extends createSystem({
       this._audio.playCombo(combo);
       if (combo >= 3) this.showToast(`COMBO x${combo}!`);
     };
+
+    this._gameSystem.setAutoCompleteReadyCallback(() => {
+      this.showToast('Auto-complete ready! Press A');
+    });
   }
 
   // ── Panel Binding ─────────────────────────────────────────
@@ -231,6 +241,9 @@ export class UISystem extends createSystem({
     bindPanel('tutPanel',
       d => { this.tutDoc = d; }, e => { this.tutEntity = e; },
       d => this.setupTutorial(d));
+    bindPanel('challengePanel',
+      d => { this.challengeDoc = d; }, e => { this.challengeEntity = e; },
+      d => this.setupChallengeSelect(d));
 
     // Check if all main panels bound
     if (this.titleDoc && this.hudDoc) {
@@ -282,6 +295,7 @@ export class UISystem extends createSystem({
     const modes: [string, GameMode][] = [
       ['btn-classic', 'classic'], ['btn-timed', 'timed'], ['btn-zen', 'zen'],
       ['btn-daily', 'daily'], ['btn-speed', 'speed'], ['btn-practice', 'practice'],
+      ['btn-challenge', 'challenge'],
     ];
     for (const [btn, mode] of modes) {
       this.addClick(doc, btn, () => {
@@ -297,7 +311,8 @@ export class UISystem extends createSystem({
 
   private setupLayoutSelect(doc: UIKitDocument): void {
     const layouts: [string, number][] = [
-      ['btn-fortress', 0], ['btn-pyramid', 1], ['btn-tower', 2], ['btn-cross', 3],
+      ['btn-fortress', 0], ['btn-pyramid', 1], ['btn-tower', 2],
+      ['btn-cross', 3], ['btn-diamond', 4], ['btn-spiral', 5],
     ];
     for (const [btn, idx] of layouts) {
       this.addClick(doc, btn, () => {
@@ -306,6 +321,19 @@ export class UISystem extends createSystem({
       });
     }
     this.addClick(doc, 'btn-layout-back', () => {
+      this._audio.playClick();
+      this._gameSystem.goTo('modeselect');
+    });
+  }
+
+  private setupChallengeSelect(doc: UIKitDocument): void {
+    for (let i = 0; i < CHALLENGES.length; i++) {
+      this.addClick(doc, `ch-${i}`, () => {
+        this._audio.playClick();
+        this._gameSystem.startChallengeSetup(CHALLENGES[i].id);
+      });
+    }
+    this.addClick(doc, 'btn-ch-back', () => {
       this._audio.playClick();
       this._gameSystem.goTo('modeselect');
     });
@@ -337,6 +365,13 @@ export class UISystem extends createSystem({
       this._audio.playClick();
       this._gameSystem.togglePause();
       setTimeout(() => this._gameSystem.requestShuffle(), 100);
+    });
+    this.addClick(doc, 'btn-autocomplete', () => {
+      this._audio.playClick();
+      if (this._gameSystem.isAutoCompleteAvailable()) {
+        this._gameSystem.togglePause();
+        setTimeout(() => this._gameSystem.triggerAutoComplete(), 100);
+      }
     });
     this.addClick(doc, 'btn-quit', () => {
       this._audio.playClick();
@@ -372,7 +407,6 @@ export class UISystem extends createSystem({
   }
 
   private setupSettings(doc: UIKitDocument): void {
-    // Master volume
     this.addClick(doc, 'btn-master-down', () => {
       this._audio.masterVol = Math.max(0, this._audio.masterVol - 0.1);
       this._audio.updateVolumes();
@@ -383,7 +417,6 @@ export class UISystem extends createSystem({
       this._audio.updateVolumes();
       this.updateSettings();
     });
-    // SFX volume
     this.addClick(doc, 'btn-sfx-down', () => {
       this._audio.sfxVol = Math.max(0, this._audio.sfxVol - 0.1);
       this._audio.updateVolumes();
@@ -394,7 +427,6 @@ export class UISystem extends createSystem({
       this._audio.updateVolumes();
       this.updateSettings();
     });
-    // Music volume
     this.addClick(doc, 'btn-music-down', () => {
       this._audio.musicVol = Math.max(0, this._audio.musicVol - 0.1);
       this._audio.updateVolumes();
@@ -405,7 +437,6 @@ export class UISystem extends createSystem({
       this._audio.updateVolumes();
       this.updateSettings();
     });
-    // Theme cycle
     this.addClick(doc, 'btn-theme-prev', () => {
       this._audio.playClick();
       this._state.currentThemeIdx = (this._state.currentThemeIdx - 1 + THEMES.length) % THEMES.length;
@@ -488,13 +519,13 @@ export class UISystem extends createSystem({
       ['leaderboard', this.lbEntity],
       ['countdown', this.cdEntity],
       ['tutorial', this.tutEntity],
+      ['challengeselect', this.challengeEntity],
     ];
     for (const [screen, entity] of map) {
       if (entity?.object3D) {
         entity.object3D.visible = this.currentScreen === screen;
       }
     }
-    // Toast is independent
   }
 
   // ── Content Updates ───────────────────────────────────────
@@ -505,6 +536,12 @@ export class UISystem extends createSystem({
         break;
       case 'gameover':
         this.updateGameOver();
+        break;
+      case 'challengeselect':
+        this.updateChallengeSelect();
+        break;
+      case 'pause':
+        this.updatePauseMenu();
         break;
     }
   }
@@ -527,12 +564,13 @@ export class UISystem extends createSystem({
     const remaining = b.tiles.filter(t => !t.removed).length;
     setText(this.hudDoc, 'hud-tiles', `Tiles: ${remaining}`);
 
-    if (modeDef.timeLimit > 0) {
+    const hasTimeLimit = modeDef.timeLimit > 0 || (b.challengeId && b.timeRemaining > 0);
+    if (hasTimeLimit) {
       setText(this.hudDoc, 'hud-time', `Time: ${this._state.formatTime(b.timeRemaining)}`);
     } else {
       setText(this.hudDoc, 'hud-time', `Time: ${this._state.formatTime(b.elapsedTime)}`);
     }
-    setText(this.hudDoc, 'hud-mode', modeDef.name);
+    setText(this.hudDoc, 'hud-mode', b.challengeId ? 'Challenge' : modeDef.name);
     setText(this.hudDoc, 'hud-layout', LAYOUTS[b.layoutIdx].name);
   }
 
@@ -540,7 +578,20 @@ export class UISystem extends createSystem({
     if (!this.goDoc || !this._state.board) return;
     const b = this._state.board;
 
-    setText(this.goDoc, 'go-title', b.won ? 'BOARD CLEARED!' : 'NO MOVES LEFT');
+    let title = b.won ? 'BOARD CLEARED!' : 'NO MOVES LEFT';
+
+    // Challenge result
+    if (b.challengeId && b.won) {
+      const ch = CHALLENGES.find(c => c.id === b.challengeId);
+      if (ch) {
+        const meetsScore = ch.targetScore === 0 || b.score >= ch.targetScore;
+        const meetsCombo = ch.minCombo === 0 || b.bestCombo >= ch.minCombo;
+        const meetsHints = ch.maxHints === -1 || b.hintsUsed <= ch.maxHints;
+        title = (meetsScore && meetsCombo && meetsHints) ? 'CHALLENGE COMPLETE!' : 'OBJECTIVE FAILED';
+      }
+    }
+
+    setText(this.goDoc, 'go-title', title);
     setText(this.goDoc, 'go-score', `Score: ${b.score}`);
     setText(this.goDoc, 'go-matches', `Matches: ${b.matchCount}`);
     setText(this.goDoc, 'go-time', `Time: ${this._state.formatTime(b.elapsedTime)}`);
@@ -549,6 +600,28 @@ export class UISystem extends createSystem({
     setText(this.goDoc, 'go-shuffles', `Shuffles: ${b.shufflesUsed}`);
     const xp = b.won ? Math.floor(b.score / 10) + 50 : 0;
     setText(this.goDoc, 'go-xp', `+${xp} XP`);
+
+    // Win streak info
+    if (b.won && this._state.stats.winStreak > 1) {
+      setText(this.goDoc, 'go-shuffles', `Win Streak: ${this._state.stats.winStreak}`);
+    }
+  }
+
+  private updateChallengeSelect(): void {
+    if (!this.challengeDoc) return;
+    const completed = this._state.stats.challengesCompleted;
+    setText(this.challengeDoc, 'ch-progress', `${completed.size} / ${CHALLENGES.length} completed`);
+
+    for (let i = 0; i < CHALLENGES.length; i++) {
+      const ch = CHALLENGES[i];
+      const done = completed.has(ch.id);
+      const prefix = done ? '[DONE] ' : '';
+      setText(this.challengeDoc, `ch-${i}`, `${prefix}${ch.name} - ${ch.description}`);
+    }
+  }
+
+  private updatePauseMenu(): void {
+    // Nothing special needed - auto-complete button click is handled in setup
   }
 
   private updateAchievements(): void {
@@ -586,7 +659,7 @@ export class UISystem extends createSystem({
     setText(this.statsDoc, 'stat-6', `Hints Used: ${s.hintsUsed}`);
     setText(this.statsDoc, 'stat-7', `Shuffles Used: ${s.shufflesUsed}`);
     setText(this.statsDoc, 'stat-8', `Total Tiles Cleared: ${s.totalTilesCleared}`);
-    setText(this.statsDoc, 'stat-9', `Play Time: ${Math.floor(s.playTimeMinutes)}m`);
+    setText(this.statsDoc, 'stat-9', `Win Streak: ${s.winStreak} (Best: ${s.bestWinStreak})`);
     setText(this.statsDoc, 'stat-10', `Level: ${s.level} (${s.xp} XP)`);
   }
 

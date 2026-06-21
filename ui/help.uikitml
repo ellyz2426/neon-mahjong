@@ -4,20 +4,20 @@
     <text fontSize="14" fontWeight="bold" color="#ffaa00">Goal</text>
     <text fontSize="12" color="#ffffff">Clear all tiles by matching pairs. A tile is free if no tile is on top and at least one side is open.</text>
     <text fontSize="14" fontWeight="bold" color="#ffaa00">Browser Controls</text>
-    <text fontSize="12" color="#ffffff">Click: Select tile | Right-click: Rotate board</text>
+    <text fontSize="12" color="#ffffff">Click: Select tile</text>
     <text fontSize="12" color="#ffffff">H: Hint | S: Shuffle | Z: Undo | ESC: Pause</text>
+    <text fontSize="12" color="#ffffff">A: Auto-complete (when available)</text>
     <text fontSize="14" fontWeight="bold" color="#ffaa00">VR Controls</text>
-    <text fontSize="12" color="#ffffff">Trigger: Select tile | Thumbstick: Rotate board</text>
-    <text fontSize="12" color="#ffffff">A: Hint | B: Pause | Grip: Shuffle</text>
+    <text fontSize="12" color="#ffffff">Trigger: Select | Thumbstick: Rotate</text>
+    <text fontSize="12" color="#ffffff">A: Hint | B: Pause | Left A: Shuffle</text>
+    <text fontSize="12" color="#ffffff">Left B: Auto-complete (when available)</text>
     <text fontSize="14" fontWeight="bold" color="#ffaa00">Scoring</text>
-    <text fontSize="12" color="#ffffff">100 pts per match. Fast consecutive matches build combo multiplier up to x10.</text>
+    <text fontSize="12" color="#ffffff">100 pts per match. Fast matches build combo x10.</text>
     <text fontSize="14" fontWeight="bold" color="#ffaa00">Modes</text>
-    <text fontSize="12" color="#ffffff">Classic: Clear the board, time counts up</text>
-    <text fontSize="12" color="#ffffff">Timed: 5-minute countdown</text>
-    <text fontSize="12" color="#ffffff">Zen: No timer, no pressure</text>
-    <text fontSize="12" color="#ffffff">Daily: Same puzzle for everyone today</text>
-    <text fontSize="12" color="#ffffff">Speed: +5s per match, bonus for fast clears</text>
-    <text fontSize="12" color="#ffffff">Practice: Unlimited hints and shuffles</text>
+    <text fontSize="11" color="#ffffff">Classic: Clear the board | Timed: 5 min</text>
+    <text fontSize="11" color="#ffffff">Zen: No pressure | Daily: Same for all</text>
+    <text fontSize="11" color="#ffffff">Speed: +5s per match | Practice: Free play</text>
+    <text fontSize="11" color="#ff4466">Challenge: Beat specific objectives!</text>
   </container>
   <text name="btn-help-back" fontSize="14" color="#888888" textAlign="center" padding="6">BACK</text>
 </container>

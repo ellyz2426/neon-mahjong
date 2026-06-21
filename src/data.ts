@@ -1,17 +1,15 @@
-// Neon Mahjong VR - Game Data
+// Neon Mahjong VR - Game Data (Extended)
 
 // ── Tile types ──────────────────────────────────────────────
 export interface TileType {
   id: number;
   suit: string;
   rank: number | string;
-  label: string;     // Short label for canvas texture
-  color: string;     // Primary color
-  matchGroup: number; // Tiles with same matchGroup can match
+  label: string;
+  color: string;
+  matchGroup: number;
 }
 
-// Match groups: 0-8 dots, 9-17 bamboo, 18-26 chars, 27-30 winds, 31-33 dragons, 34 flowers, 35 seasons
-const SUITS = ['dot', 'bam', 'char'] as const;
 const SUIT_COLORS = { dot: '#00ccff', bam: '#00ff88', char: '#ff4466' };
 const DOT_LABELS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const BAM_LABELS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -23,35 +21,30 @@ const SEASON_LABELS = ['S1', 'S2', 'S3', 'S4'];
 
 export const TILE_TYPES: TileType[] = [];
 
-// Dots 1-9 (match groups 0-8)
 for (let i = 0; i < 9; i++) {
   TILE_TYPES.push({
     id: i, suit: 'dot', rank: i + 1,
     label: DOT_LABELS[i], color: SUIT_COLORS.dot, matchGroup: i,
   });
 }
-// Bamboo 1-9 (match groups 9-17)
 for (let i = 0; i < 9; i++) {
   TILE_TYPES.push({
     id: 9 + i, suit: 'bam', rank: i + 1,
     label: BAM_LABELS[i], color: SUIT_COLORS.bam, matchGroup: 9 + i,
   });
 }
-// Characters 1-9 (match groups 18-26)
 for (let i = 0; i < 9; i++) {
   TILE_TYPES.push({
     id: 18 + i, suit: 'char', rank: i + 1,
     label: CHAR_LABELS[i], color: SUIT_COLORS.char, matchGroup: 18 + i,
   });
 }
-// Winds (match groups 27-30)
 for (let i = 0; i < 4; i++) {
   TILE_TYPES.push({
     id: 27 + i, suit: 'wind', rank: WIND_LABELS[i],
     label: WIND_LABELS[i], color: '#ffffff', matchGroup: 27 + i,
   });
 }
-// Dragons (match groups 31-33)
 const DRAGON_COLORS = ['#ff2222', '#22ff22', '#ffffff'];
 for (let i = 0; i < 3; i++) {
   TILE_TYPES.push({
@@ -59,14 +52,12 @@ for (let i = 0; i < 3; i++) {
     label: DRAGON_LABELS[i], color: DRAGON_COLORS[i], matchGroup: 31 + i,
   });
 }
-// Flowers (match group 34 - all match each other)
 for (let i = 0; i < 4; i++) {
   TILE_TYPES.push({
     id: 34 + i, suit: 'flower', rank: FLOWER_LABELS[i],
     label: FLOWER_LABELS[i], color: '#ff88ff', matchGroup: 34,
   });
 }
-// Seasons (match group 35 - all match each other)
 for (let i = 0; i < 4; i++) {
   TILE_TYPES.push({
     id: 38 + i, suit: 'season', rank: SEASON_LABELS[i],
@@ -74,16 +65,13 @@ for (let i = 0; i < 4; i++) {
   });
 }
 
-// Total: 42 types. Standard set: 4 copies each of types 0-33, 1 each of 34-41 = 136 + 8 = 144
 export function generateTileSet(): number[] {
   const tiles: number[] = [];
-  // 4 copies of each standard type (0-33)
   for (let i = 0; i < 34; i++) {
     for (let c = 0; c < 4; c++) tiles.push(i);
   }
-  // 1 copy each of flowers and seasons (34-41)
   for (let i = 34; i < 42; i++) tiles.push(i);
-  return tiles; // 136 + 8 = 144
+  return tiles; // 144
 }
 
 // ── Layouts ─────────────────────────────────────────────────
@@ -93,286 +81,119 @@ export interface TilePosition {
   layer: number;
 }
 
-// Fortress (classic turtle) - 144 tiles across 5 layers
 function makeFortress(): TilePosition[] {
   const pos: TilePosition[] = [];
-  // Layer 0: large base
-  // Row patterns for classic layout (12 cols, 8 rows with gaps)
-  const l0rows: [number, number][] = [
-    [0, 12], // row 0: cols 0-11
-    [0, 12], // row 1
-    [0, 12], // row 2
-    [0, 14], // row 3: wider with ears
-    [0, 14], // row 4
-    [0, 12], // row 5
-    [0, 12], // row 6
-    [0, 12], // row 7
-  ];
-  // Actually, let me do a specific Turtle layout
-  // Classic Turtle has a specific pattern. Let me define it precisely.
-  // Layer 0: the big base
-  const layer0: [number, number, number][] = [];
-  // Rows 0,7: cols 2-9
-  for (const r of [0, 7]) {
-    for (let c = 2; c <= 9; c++) layer0.push([c, r, 0]);
-  }
-  // Rows 1,6: cols 1-10
-  for (const r of [1, 6]) {
-    for (let c = 1; c <= 10; c++) layer0.push([c, r, 0]);
-  }
-  // Rows 2,5: cols 0-11
-  for (const r of [2, 5]) {
-    for (let c = 0; c <= 11; c++) layer0.push([c, r, 0]);
-  }
-  // Rows 3,4: cols 0-12 (wide with ears)
-  for (const r of [3, 4]) {
-    for (let c = 0; c <= 12; c++) layer0.push([c, r, 0]);
-  }
-  // Total layer 0: 8*2 + 10*2 + 12*2 + 13*2 = 16+20+24+26 = 86
-
-  // Layer 1: smaller
-  const layer1: [number, number, number][] = [];
-  for (const r of [1, 6]) {
-    for (let c = 3; c <= 8; c++) layer1.push([c, r, 1]);
-  }
-  for (const r of [2, 3, 4, 5]) {
-    for (let c = 2; c <= 9; c++) layer1.push([c, r, 1]);
-  }
-  // Total: 6*2 + 8*4 = 12+32 = 44
-
-  // Layer 2
-  const layer2: [number, number, number][] = [];
-  for (const r of [2, 5]) {
-    for (let c = 4; c <= 7; c++) layer2.push([c, r, 2]);
-  }
-  for (const r of [3, 4]) {
-    for (let c = 4; c <= 7; c++) layer2.push([c, r, 2]);
-  }
-  // Total: 4*4 = 16 -- too many, need to trim
-
-  // Adjust to hit 144 total. Let me recalculate:
-  // 86 + 44 + 16 = 146 -- need to remove 2
-  // Remove corners from layer 2:
-  // layer2 without (4,2) and (7,5)
-  const layer2adj: [number, number, number][] = [];
-  for (const r of [2, 3, 4, 5]) {
-    for (let c = 4; c <= 7; c++) {
-      if ((r === 2 && c === 4) || (r === 5 && c === 7)) continue;
-      layer2adj.push([c, r, 2]);
-    }
-  }
-  // Total: 14
-
-  // Actually let me just do a simpler well-balanced layout
-  // Layer 0: ~80, Layer 1: ~40, Layer 2: ~16, Layer 3: ~6, Layer 4: ~2
-  // Let me redo this more carefully
-  pos.length = 0;
-
-  // Layer 0 (base): 12x8 grid with cuts = exactly 86 tiles
   for (let r = 0; r < 8; r++) {
     let cStart = 0, cEnd = 11;
     if (r === 0 || r === 7) { cStart = 2; cEnd = 9; }
     else if (r === 1 || r === 6) { cStart = 1; cEnd = 10; }
-    else if (r === 2 || r === 5) { cStart = 0; cEnd = 11; }
-    else { cStart = 0; cEnd = 11; } // rows 3,4
     for (let c = cStart; c <= cEnd; c++) {
       pos.push({ col: c, row: r, layer: 0 });
     }
   }
-  // Count: 8+10+12+12+12+12+10+8 = 84
-
-  // Layer 1: 8x6 inner = 48 -- too much with 84
-  // Need 144 - 84 = 60 more. Let me adjust.
-  // Layer 1: 6x4 = 24
+  // 84 layer 0
   for (let r = 2; r <= 5; r++) {
-    for (let c = 3; c <= 8; c++) {
-      pos.push({ col: c, row: r, layer: 1 });
-    }
+    for (let c = 3; c <= 8; c++) pos.push({ col: c, row: r, layer: 1 });
   }
   // +24 = 108
-
-  // Layer 2: 4x4 centered = 16
   for (let r = 2; r <= 5; r++) {
-    for (let c = 4; c <= 7; c++) {
-      pos.push({ col: c, row: r, layer: 2 });
-    }
+    for (let c = 4; c <= 7; c++) pos.push({ col: c, row: r, layer: 2 });
   }
   // +16 = 124
-
-  // Layer 3: 4x2 centered = 8
   for (let r = 3; r <= 4; r++) {
-    for (let c = 4; c <= 7; c++) {
-      pos.push({ col: c, row: r, layer: 3 });
-    }
+    for (let c = 4; c <= 7; c++) pos.push({ col: c, row: r, layer: 3 });
   }
   // +8 = 132
-
-  // Layer 4: 2x2 centered = 4
   for (let r = 3; r <= 4; r++) {
-    for (let c = 5; c <= 6; c++) {
-      pos.push({ col: c, row: r, layer: 4 });
-    }
+    for (let c = 5; c <= 6; c++) pos.push({ col: c, row: r, layer: 4 });
   }
   // +4 = 136
-
-  // Need 8 more. Add ears to layer 0
-  // Left ear row 3: col -1, Right ear row 3: col 12
-  // Left ear row 4: col -1, Right ear row 4: col 12
   pos.push({ col: -1, row: 3, layer: 0 });
   pos.push({ col: -1, row: 4, layer: 0 });
   pos.push({ col: 12, row: 3, layer: 0 });
   pos.push({ col: 12, row: 4, layer: 0 });
   // +4 = 140
-
-  // Top cap: single stack
   pos.push({ col: 5, row: 3, layer: 5 });
   pos.push({ col: 6, row: 3, layer: 5 });
   pos.push({ col: 5, row: 4, layer: 5 });
   pos.push({ col: 6, row: 4, layer: 5 });
   // +4 = 144
-
   return pos;
 }
 
 function makePyramid(): TilePosition[] {
   const pos: TilePosition[] = [];
-  // Layer 0: 10x8 = 80
   for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 10; c++) {
-      pos.push({ col: c, row: r, layer: 0 });
-    }
+    for (let c = 0; c < 10; c++) pos.push({ col: c, row: r, layer: 0 });
   }
-  // Layer 1: 8x6 = 48
   for (let r = 1; r < 7; r++) {
-    for (let c = 1; c < 9; c++) {
-      pos.push({ col: c, row: r, layer: 1 });
-    }
+    for (let c = 1; c < 9; c++) pos.push({ col: c, row: r, layer: 1 });
   }
-  // 80 + 48 = 128
-  // Layer 2: 4x4 = 16
   for (let r = 2; r < 6; r++) {
-    for (let c = 3; c < 7; c++) {
-      pos.push({ col: c, row: r, layer: 2 });
-    }
+    for (let c = 3; c < 7; c++) pos.push({ col: c, row: r, layer: 2 });
   }
-  // 128 + 16 = 144
   return pos;
 }
 
 function makeTower(): TilePosition[] {
   const pos: TilePosition[] = [];
-  // Layer 0: 6x6 = 36
   for (let r = 0; r < 6; r++) {
-    for (let c = 0; c < 6; c++) {
-      pos.push({ col: c, row: r, layer: 0 });
-    }
+    for (let c = 0; c < 6; c++) pos.push({ col: c, row: r, layer: 0 });
   }
-  // Layer 1: 6x6 = 36
   for (let r = 0; r < 6; r++) {
-    for (let c = 0; c < 6; c++) {
-      pos.push({ col: c, row: r, layer: 1 });
-    }
+    for (let c = 0; c < 6; c++) pos.push({ col: c, row: r, layer: 1 });
   }
-  // Layer 2: 4x4 = 16
   for (let r = 1; r < 5; r++) {
-    for (let c = 1; c < 5; c++) {
-      pos.push({ col: c, row: r, layer: 2 });
-    }
+    for (let c = 1; c < 5; c++) pos.push({ col: c, row: r, layer: 2 });
   }
-  // Layer 3: 4x4 = 16
   for (let r = 1; r < 5; r++) {
-    for (let c = 1; c < 5; c++) {
-      pos.push({ col: c, row: r, layer: 3 });
-    }
+    for (let c = 1; c < 5; c++) pos.push({ col: c, row: r, layer: 3 });
   }
-  // 36+36+16+16 = 104
-  // Layer 4: 4x4 = 16
   for (let r = 1; r < 5; r++) {
-    for (let c = 1; c < 5; c++) {
-      pos.push({ col: c, row: r, layer: 4 });
-    }
+    for (let c = 1; c < 5; c++) pos.push({ col: c, row: r, layer: 4 });
   }
-  // 120
-  // Layer 5: 2x2 = 4
   for (let r = 2; r < 4; r++) {
-    for (let c = 2; c < 4; c++) {
-      pos.push({ col: c, row: r, layer: 5 });
-    }
+    for (let c = 2; c < 4; c++) pos.push({ col: c, row: r, layer: 5 });
   }
-  // 124 -- need 20 more
-  // Layer 6: 2x2 = 4
   for (let r = 2; r < 4; r++) {
-    for (let c = 2; c < 4; c++) {
-      pos.push({ col: c, row: r, layer: 6 });
-    }
+    for (let c = 2; c < 4; c++) pos.push({ col: c, row: r, layer: 6 });
   }
-  // 128. Add extra base tiles:
-  // Extend layer 0 by adding ring
-  pos.push({ col: -1, row: 1, layer: 0 });
-  pos.push({ col: -1, row: 2, layer: 0 });
-  pos.push({ col: -1, row: 3, layer: 0 });
-  pos.push({ col: -1, row: 4, layer: 0 });
-  pos.push({ col: 6, row: 1, layer: 0 });
-  pos.push({ col: 6, row: 2, layer: 0 });
-  pos.push({ col: 6, row: 3, layer: 0 });
-  pos.push({ col: 6, row: 4, layer: 0 });
-  // 136
-  pos.push({ col: 1, row: -1, layer: 0 });
-  pos.push({ col: 2, row: -1, layer: 0 });
-  pos.push({ col: 3, row: -1, layer: 0 });
-  pos.push({ col: 4, row: -1, layer: 0 });
-  pos.push({ col: 1, row: 6, layer: 0 });
-  pos.push({ col: 2, row: 6, layer: 0 });
-  pos.push({ col: 3, row: 6, layer: 0 });
-  pos.push({ col: 4, row: 6, layer: 0 });
-  // 144
+  // 128 → add wings
+  pos.push({ col: -1, row: 1, layer: 0 }); pos.push({ col: -1, row: 2, layer: 0 });
+  pos.push({ col: -1, row: 3, layer: 0 }); pos.push({ col: -1, row: 4, layer: 0 });
+  pos.push({ col: 6, row: 1, layer: 0 }); pos.push({ col: 6, row: 2, layer: 0 });
+  pos.push({ col: 6, row: 3, layer: 0 }); pos.push({ col: 6, row: 4, layer: 0 });
+  pos.push({ col: 1, row: -1, layer: 0 }); pos.push({ col: 2, row: -1, layer: 0 });
+  pos.push({ col: 3, row: -1, layer: 0 }); pos.push({ col: 4, row: -1, layer: 0 });
+  pos.push({ col: 1, row: 6, layer: 0 }); pos.push({ col: 2, row: 6, layer: 0 });
+  pos.push({ col: 3, row: 6, layer: 0 }); pos.push({ col: 4, row: 6, layer: 0 });
   return pos;
 }
 
 function makeCross(): TilePosition[] {
   const pos: TilePosition[] = [];
-  // Layer 0: cross shape, 4 arms + center
-  // Center block 4x4
+  // Center 4x4
   for (let r = 3; r < 7; r++) {
-    for (let c = 3; c < 7; c++) {
-      pos.push({ col: c, row: r, layer: 0 });
-    }
+    for (let c = 3; c < 7; c++) pos.push({ col: c, row: r, layer: 0 });
   }
-  // Top arm: cols 4-5, rows 0-2
+  // Arms
   for (let r = 0; r < 3; r++) {
-    for (let c = 3; c < 7; c++) {
-      pos.push({ col: c, row: r, layer: 0 });
-    }
+    for (let c = 3; c < 7; c++) pos.push({ col: c, row: r, layer: 0 });
   }
-  // Bottom arm
   for (let r = 7; r < 10; r++) {
-    for (let c = 3; c < 7; c++) {
-      pos.push({ col: c, row: r, layer: 0 });
-    }
+    for (let c = 3; c < 7; c++) pos.push({ col: c, row: r, layer: 0 });
   }
-  // Left arm
   for (let r = 3; r < 7; r++) {
-    for (let c = 0; c < 3; c++) {
-      pos.push({ col: c, row: r, layer: 0 });
-    }
+    for (let c = 0; c < 3; c++) pos.push({ col: c, row: r, layer: 0 });
   }
-  // Right arm
   for (let r = 3; r < 7; r++) {
-    for (let c = 7; c < 10; c++) {
-      pos.push({ col: c, row: r, layer: 0 });
-    }
+    for (let c = 7; c < 10; c++) pos.push({ col: c, row: r, layer: 0 });
   }
-  // Count: 16 + 12 + 12 + 12 + 12 = 64
-
-  // Layer 1: center 4x4 = 16
+  // 64 layer 0
   for (let r = 3; r < 7; r++) {
-    for (let c = 3; c < 7; c++) {
-      pos.push({ col: c, row: r, layer: 1 });
-    }
+    for (let c = 3; c < 7; c++) pos.push({ col: c, row: r, layer: 1 });
   }
   // 80
-
-  // Layer 0 extensions: arm tips wider
   for (let c = 2; c < 8; c++) {
     pos.push({ col: c, row: -1, layer: 0 });
     pos.push({ col: c, row: 10, layer: 0 });
@@ -381,26 +202,15 @@ function makeCross(): TilePosition[] {
     pos.push({ col: -1, row: r, layer: 0 });
     pos.push({ col: 10, row: r, layer: 0 });
   }
-  // +12+12 = 24 → 104
-
-  // Layer 2: 4x4 = 16
+  // 104
   for (let r = 3; r < 7; r++) {
-    for (let c = 3; c < 7; c++) {
-      pos.push({ col: c, row: r, layer: 2 });
-    }
+    for (let c = 3; c < 7; c++) pos.push({ col: c, row: r, layer: 2 });
   }
   // 120
-
-  // Layer 3: 2x2 = 4
   for (let r = 4; r < 6; r++) {
-    for (let c = 4; c < 6; c++) {
-      pos.push({ col: c, row: r, layer: 3 });
-    }
+    for (let c = 4; c < 6; c++) pos.push({ col: c, row: r, layer: 3 });
   }
   // 124
-
-  // Add more base tiles to reach 144:
-  // Extra arm tiles
   const extras: [number, number][] = [
     [2, 0], [7, 0], [2, 9], [7, 9],
     [0, 2], [0, 7], [9, 2], [9, 7],
@@ -412,6 +222,142 @@ function makeCross(): TilePosition[] {
     if (pos.length >= 144) break;
     pos.push({ col: c, row: r, layer: 0 });
   }
+  return pos.slice(0, 144);
+}
+
+// ── NEW LAYOUT: Diamond ─────────────────────────────────────
+function makeDiamond(): TilePosition[] {
+  const pos: TilePosition[] = [];
+  // Layer 0: diamond shape ~72 tiles
+  const center = 6;
+  for (let r = 0; r < 13; r++) {
+    const dist = Math.abs(r - center);
+    const half = 6 - dist;
+    if (half < 0) continue;
+    for (let c = center - half; c <= center + half; c++) {
+      pos.push({ col: c, row: r, layer: 0 });
+    }
+  }
+  // Should be ~91 tiles. Trim to 80 by narrowing
+  // Actually let me compute: r=0: 1, r=1: 3, r=2: 5, r=3: 7, r=4: 9, r=5: 11, r=6: 13, r=7: 11, ...
+  // Total: 1+3+5+7+9+11+13+11+9+7+5+3+1 = 85
+  // Trim to 80 by removing corners: take first 80
+  while (pos.length > 80) pos.pop();
+
+  // Layer 1: smaller diamond 40 tiles
+  for (let r = 2; r < 11; r++) {
+    const dist = Math.abs(r - center);
+    const half = 4 - dist;
+    if (half < 0) continue;
+    for (let c = center - half; c <= center + half; c++) {
+      pos.push({ col: c, row: r, layer: 1 });
+    }
+  }
+  // r=2: dist=4, half=0: 1, r=3: dist=3, half=1: 3, r=4: half=2: 5, r=5: half=3: 7, r=6: half=4: 9
+  // r=7: 7, r=8: 5, r=9: 3, r=10: 1 = 1+3+5+7+9+7+5+3+1 = 41
+  // Trim
+  while (pos.length > 80 + 40) pos.pop();
+
+  // Layer 2: 16 tiles
+  for (let r = 4; r < 9; r++) {
+    const dist = Math.abs(r - center);
+    const half = 2 - dist;
+    if (half < 0) continue;
+    for (let c = center - half; c <= center + half; c++) {
+      pos.push({ col: c, row: r, layer: 2 });
+    }
+  }
+  // r=4: dist=2, half=0: 1, r=5: half=1: 3, r=6: half=2: 5, r=7: 3, r=8: 1 = 13
+
+  // Layer 3: 4 tiles
+  for (let r = 5; r < 8; r++) {
+    const dist = Math.abs(r - center);
+    const half = 1 - dist;
+    if (half < 0) continue;
+    for (let c = center - half; c <= center + half; c++) {
+      pos.push({ col: c, row: r, layer: 3 });
+    }
+  }
+  // r=5: 1, r=6: 3, r=7: 1 = 5
+
+  // Layer 4: cap
+  pos.push({ col: center, row: center, layer: 4 });
+
+  // Need exactly 144. Pad or trim.
+  // Current: 80 + 40 + 13 + 5 + 1 = 139. Need 5 more.
+  // Add wing tips
+  pos.push({ col: 0, row: 5, layer: 0 });
+  pos.push({ col: 0, row: 7, layer: 0 });
+  pos.push({ col: 12, row: 5, layer: 0 });
+  pos.push({ col: 12, row: 7, layer: 0 });
+  pos.push({ col: center, row: center, layer: 5 });
+
+  return pos.slice(0, 144);
+}
+
+// ── NEW LAYOUT: Spiral ──────────────────────────────────────
+function makeSpiral(): TilePosition[] {
+  const pos: TilePosition[] = [];
+
+  // Layer 0: rectangular base 10x8 = 80
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 10; c++) {
+      pos.push({ col: c, row: r, layer: 0 });
+    }
+  }
+
+  // Layer 1: offset spiral ring = 36 tiles
+  // Outer ring of 6x6
+  const l1Center = { c: 5, r: 4 };
+  for (let r = 1; r < 7; r++) {
+    for (let c = 2; c < 8; c++) {
+      const onEdge = r === 1 || r === 6 || c === 2 || c === 7;
+      if (onEdge) pos.push({ col: c, row: r, layer: 1 });
+    }
+  }
+  // Ring: (6+6)*2 - 4 = 20. Too few, fill inner
+  for (let r = 2; r < 6; r++) {
+    for (let c = 3; c < 7; c++) {
+      pos.push({ col: c, row: r, layer: 1 });
+    }
+  }
+  // +16 = 80+20+16 = 116
+
+  // Layer 2: central block 4x3 = 12
+  for (let r = 3; r < 6; r++) {
+    for (let c = 3; c < 7; c++) {
+      pos.push({ col: c, row: r, layer: 2 });
+    }
+  }
+  // 128
+
+  // Layer 3: 2x3 = 6
+  for (let r = 3; r < 6; r++) {
+    for (let c = 4; c < 6; c++) {
+      pos.push({ col: c, row: r, layer: 3 });
+    }
+  }
+  // 134
+
+  // Layer 4: 2x2 = 4
+  for (let r = 3; r < 5; r++) {
+    for (let c = 4; c < 6; c++) {
+      pos.push({ col: c, row: r, layer: 4 });
+    }
+  }
+  // 138
+
+  // Extra layer 0 tiles for wings
+  pos.push({ col: -1, row: 3, layer: 0 });
+  pos.push({ col: -1, row: 4, layer: 0 });
+  pos.push({ col: 10, row: 3, layer: 0 });
+  pos.push({ col: 10, row: 4, layer: 0 });
+  // 142
+
+  // Cap
+  pos.push({ col: 4, row: 4, layer: 5 });
+  pos.push({ col: 5, row: 4, layer: 5 });
+  // 144
 
   return pos.slice(0, 144);
 }
@@ -423,21 +369,23 @@ export interface LayoutDef {
 }
 
 export const LAYOUTS: LayoutDef[] = [
-  { name: 'Fortress', description: '5 layers', generate: makeFortress },
+  { name: 'Fortress', description: '6 layers', generate: makeFortress },
   { name: 'Pyramid', description: 'Wide base', generate: makePyramid },
   { name: 'Tower', description: 'Deep stack', generate: makeTower },
   { name: 'Cross', description: 'Wide spread', generate: makeCross },
+  { name: 'Diamond', description: 'Concentric', generate: makeDiamond },
+  { name: 'Spiral', description: 'Layered ring', generate: makeSpiral },
 ];
 
 // ── Game Modes ──────────────────────────────────────────────
-export type GameMode = 'classic' | 'timed' | 'zen' | 'daily' | 'speed' | 'practice';
+export type GameMode = 'classic' | 'timed' | 'zen' | 'daily' | 'speed' | 'practice' | 'challenge';
 
 export interface GameModeDef {
   id: GameMode;
   name: string;
   description: string;
-  timeLimit: number; // 0 = no limit, otherwise seconds
-  hintsAllowed: number; // -1 = unlimited
+  timeLimit: number;
+  hintsAllowed: number;
   shufflesAllowed: number;
 }
 
@@ -448,18 +396,59 @@ export const GAME_MODES: GameModeDef[] = [
   { id: 'daily', name: 'Daily', description: 'Today puzzle', timeLimit: 0, hintsAllowed: 3, shufflesAllowed: 3 },
   { id: 'speed', name: 'Speed', description: 'Fast bonus', timeLimit: 60, hintsAllowed: 1, shufflesAllowed: 1 },
   { id: 'practice', name: 'Practice', description: 'Free play', timeLimit: 0, hintsAllowed: -1, shufflesAllowed: -1 },
+  { id: 'challenge', name: 'Challenge', description: 'Beat objectives', timeLimit: 240, hintsAllowed: 2, shufflesAllowed: 2 },
+];
+
+// ── Challenge Objectives ────────────────────────────────────
+export interface ChallengeDef {
+  id: string;
+  name: string;
+  description: string;
+  targetScore: number;
+  minCombo: number;
+  maxHints: number;
+  timeLimit: number;
+}
+
+export const CHALLENGES: ChallengeDef[] = [
+  { id: 'ch1', name: 'Warmup', description: 'Score 3000', targetScore: 3000, minCombo: 0, maxHints: 3, timeLimit: 300 },
+  { id: 'ch2', name: 'Combo King', description: 'Get x5 combo', targetScore: 0, minCombo: 5, maxHints: 3, timeLimit: 300 },
+  { id: 'ch3', name: 'No Help', description: 'Win with 0 hints', targetScore: 0, minCombo: 0, maxHints: 0, timeLimit: 0 },
+  { id: 'ch4', name: 'Speed Run', description: 'Clear in 2 min', targetScore: 0, minCombo: 0, maxHints: -1, timeLimit: 120 },
+  { id: 'ch5', name: 'High Roller', description: 'Score 8000', targetScore: 8000, minCombo: 0, maxHints: 3, timeLimit: 300 },
+  { id: 'ch6', name: 'Perfectionist', description: 'x8 combo + clear', targetScore: 0, minCombo: 8, maxHints: 0, timeLimit: 0 },
+  { id: 'ch7', name: 'Lightning', description: 'Clear in 90 sec', targetScore: 0, minCombo: 0, maxHints: 1, timeLimit: 90 },
+  { id: 'ch8', name: 'Score Master', description: 'Score 15000', targetScore: 15000, minCombo: 0, maxHints: -1, timeLimit: 600 },
+];
+
+// ── Difficulty Tiers ────────────────────────────────────────
+export type Difficulty = 'easy' | 'normal' | 'hard';
+
+export interface DifficultyDef {
+  id: Difficulty;
+  name: string;
+  hintMod: number;      // multiplier for hint limit
+  shuffleMod: number;   // multiplier for shuffle limit
+  timeMod: number;      // multiplier for time limit (higher = more time)
+  scoreMod: number;     // score multiplier
+}
+
+export const DIFFICULTIES: DifficultyDef[] = [
+  { id: 'easy', name: 'Easy', hintMod: 2, shuffleMod: 2, timeMod: 1.5, scoreMod: 0.8 },
+  { id: 'normal', name: 'Normal', hintMod: 1, shuffleMod: 1, timeMod: 1, scoreMod: 1.0 },
+  { id: 'hard', name: 'Hard', hintMod: 0.5, shuffleMod: 0.5, timeMod: 0.7, scoreMod: 1.5 },
 ];
 
 // ── Themes ──────────────────────────────────────────────────
 export interface ThemeDef {
   id: string;
   name: string;
-  tileBase: number;      // tile body color (hex)
-  tileEdge: number;      // tile edge color
-  tileFace: string;      // canvas text color override (null = use type color)
-  tileSelected: number;  // selected glow color
-  bgColor: number;       // scene background
-  gridColor: number;     // floor grid color
+  tileBase: number;
+  tileEdge: number;
+  tileFace: string;
+  tileSelected: number;
+  bgColor: number;
+  gridColor: number;
   ambientColor: number;
   fogColor: number;
 }
@@ -470,9 +459,12 @@ export const THEMES: ThemeDef[] = [
   { id: 'mono', name: 'Monochrome', tileBase: 0x222222, tileEdge: 0x888888, tileFace: '#ffffff', tileSelected: 0xffffff, bgColor: 0x0a0a0a, gridColor: 0x333333, ambientColor: 0x444444, fogColor: 0x0a0a0a },
   { id: 'plasma', name: 'Plasma', tileBase: 0x1a0028, tileEdge: 0xff44ff, tileFace: '#ff88ff', tileSelected: 0xff66ff, bgColor: 0x0a0014, gridColor: 0x440066, ambientColor: 0x332244, fogColor: 0x0a0014 },
   { id: 'solar', name: 'Solar', tileBase: 0x1a1400, tileEdge: 0xffaa00, tileFace: '#ffcc44', tileSelected: 0xffcc00, bgColor: 0x0a0800, gridColor: 0x443300, ambientColor: 0x443322, fogColor: 0x0a0800 },
+  { id: 'arctic', name: 'Arctic', tileBase: 0x0a1a2a, tileEdge: 0x88ccff, tileFace: '#aaddff', tileSelected: 0xbbddff, bgColor: 0x040810, gridColor: 0x223344, ambientColor: 0x334466, fogColor: 0x040810 },
+  { id: 'ember', name: 'Ember', tileBase: 0x1a0a00, tileEdge: 0xff4400, tileFace: '#ff8844', tileSelected: 0xff6622, bgColor: 0x0a0400, gridColor: 0x442200, ambientColor: 0x443322, fogColor: 0x0a0400 },
+  { id: 'jade', name: 'Jade', tileBase: 0x0a1a0a, tileEdge: 0x22cc44, tileFace: '#44ff66', tileSelected: 0x33ff55, bgColor: 0x040a04, gridColor: 0x224422, ambientColor: 0x224422, fogColor: 0x040a04 },
 ];
 
-// ── Achievements ────────────────────────────────────────────
+// ── Achievements (60 total) ─────────────────────────────────
 export interface AchievementDef {
   id: string;
   name: string;
@@ -483,19 +475,19 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // Basics
   { id: 'first_match', name: 'First Match', desc: 'Match your first pair' },
   { id: 'first_win', name: 'First Victory', desc: 'Clear a board' },
-  { id: 'speed_demon', name: 'Speed Demon', desc: 'Clear a board under 3 minutes' },
-  { id: 'lightning', name: 'Lightning', desc: 'Clear a board under 2 minutes' },
-  { id: 'no_hints', name: 'Unassisted', desc: 'Win without using hints' },
-  { id: 'no_shuffle', name: 'No Shuffle', desc: 'Win without shuffling' },
-  { id: 'purist', name: 'Purist', desc: 'Win with no hints or shuffles' },
+  { id: 'speed_demon', name: 'Speed Demon', desc: 'Clear under 3 min' },
+  { id: 'lightning', name: 'Lightning', desc: 'Clear under 2 min' },
+  { id: 'no_hints', name: 'Unassisted', desc: 'Win without hints' },
+  { id: 'no_shuffle', name: 'No Shuffle', desc: 'Win without shuffle' },
+  { id: 'purist', name: 'Purist', desc: 'Win: no hints or shuffles' },
   // Combos
   { id: 'combo3', name: 'Triple Threat', desc: 'Reach combo x3' },
   { id: 'combo5', name: 'Combo King', desc: 'Reach combo x5' },
   { id: 'combo8', name: 'Combo Master', desc: 'Reach combo x8' },
   { id: 'combo10', name: 'Unstoppable', desc: 'Reach max combo x10' },
   // Volume
-  { id: 'matches10', name: '10 Matches', desc: 'Make 10 matches in one game' },
-  { id: 'matches50', name: 'Halfway', desc: 'Make 50 matches in one game' },
+  { id: 'matches10', name: '10 Matches', desc: '10 matches in one game' },
+  { id: 'matches50', name: 'Halfway', desc: '50 matches in one game' },
   { id: 'matches72', name: 'Full Clear', desc: 'Match all 72 pairs' },
   { id: 'total100', name: 'Century', desc: '100 total matches' },
   { id: 'total500', name: 'Veteran', desc: '500 total matches' },
@@ -511,24 +503,46 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'win25', name: 'Legend', desc: 'Win 25 games' },
   // Score
   { id: 'score5k', name: 'High Score', desc: 'Score 5000 in one game' },
-  { id: 'score10k', name: 'Score Master', desc: 'Score 10000 in one game' },
-  { id: 'score20k', name: 'Score Legend', desc: 'Score 20000 in one game' },
+  { id: 'score10k', name: 'Score Master', desc: 'Score 10000' },
+  { id: 'score20k', name: 'Score Legend', desc: 'Score 20000' },
   // Modes
   { id: 'timed_win', name: 'Beat the Clock', desc: 'Win a Timed game' },
   { id: 'speed_win', name: 'Speed Racer', desc: 'Win a Speed game' },
   { id: 'daily_win', name: 'Daily Champion', desc: 'Win a Daily puzzle' },
   { id: 'daily3', name: 'Daily Streak', desc: 'Win 3 Daily puzzles' },
+  { id: 'challenge_win', name: 'Challenger', desc: 'Beat a Challenge' },
+  { id: 'challenge3', name: 'Challenge Streak', desc: 'Beat 3 Challenges' },
+  { id: 'challenge_all', name: 'Challenge Master', desc: 'Beat all 8 Challenges' },
   // Layouts
   { id: 'fortress_win', name: 'Fortress Cleared', desc: 'Win on Fortress' },
   { id: 'pyramid_win', name: 'Pyramid Cleared', desc: 'Win on Pyramid' },
   { id: 'tower_win', name: 'Tower Cleared', desc: 'Win on Tower' },
   { id: 'cross_win', name: 'Cross Cleared', desc: 'Win on Cross' },
+  { id: 'diamond_win', name: 'Diamond Cleared', desc: 'Win on Diamond' },
+  { id: 'spiral_win', name: 'Spiral Cleared', desc: 'Win on Spiral' },
   { id: 'all_layouts', name: 'Conqueror', desc: 'Win on every layout' },
   // Themes
   { id: 'theme_change', name: 'Fashionista', desc: 'Change tile theme' },
   { id: 'all_themes', name: 'Collector', desc: 'Try every theme' },
-  // Misc
+  // XP / Level
   { id: 'xp100', name: 'Rising Star', desc: 'Reach 100 XP' },
+  { id: 'xp500', name: 'Experienced', desc: 'Reach 500 XP' },
+  { id: 'xp1000', name: 'Seasoned', desc: 'Reach 1000 XP' },
   { id: 'level5', name: 'Leveled Up', desc: 'Reach level 5' },
   { id: 'level10', name: 'Expert', desc: 'Reach level 10' },
+  { id: 'level20', name: 'Master', desc: 'Reach level 20' },
+  // Win streaks
+  { id: 'streak3', name: 'Hot Streak', desc: '3 wins in a row' },
+  { id: 'streak5', name: 'On Fire', desc: '5 wins in a row' },
+  { id: 'streak10', name: 'Invincible', desc: '10 wins in a row' },
+  // Misc
+  { id: 'auto_complete', name: 'Auto Pilot', desc: 'Use auto-complete' },
+  { id: 'fast_match', name: 'Quick Draw', desc: 'Match within 2 sec of start' },
+  { id: 'perfect_timed', name: 'Time Lord', desc: 'Timed win with 60+ sec left' },
+  { id: 'score_popup', name: 'Big Points', desc: 'Score 1000+ in one match' },
+  { id: 'play100', name: 'Centurion', desc: 'Play 100 games' },
+  { id: 'win50', name: 'Grandmaster', desc: 'Win 50 games' },
+  { id: 'all_modes', name: 'Versatile', desc: 'Win in every mode' },
+  { id: 'hard_win', name: 'Iron Will', desc: 'Win on Hard difficulty' },
+  { id: 'hard_no_hint', name: 'Fearless', desc: 'Hard win with no hints' },
 ];

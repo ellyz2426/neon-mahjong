@@ -134,6 +134,25 @@
               "borderradius": "4"
             },
             "dataUid": "uid-9"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Challenge - Beat objectives"
+            ],
+            "properties": {
+              "name": "btn-challenge",
+              "fontsize": "16",
+              "color": "#ff4466",
+              "textalign": "center",
+              "backgroundcolor": "#1a0008",
+              "padding": "8",
+              "borderwidth": "1",
+              "bordercolor": "#ff4466",
+              "borderradius": "4"
+            },
+            "dataUid": "uid-10"
           }
         ],
         "properties": {
@@ -156,7 +175,7 @@
           "textalign": "center",
           "padding": "6"
         },
-        "dataUid": "uid-10"
+        "dataUid": "uid-11"
       }
     ],
     "properties": {
@@ -181,7 +200,7 @@
         "column": 0
       },
       "end": {
-        "line": 11,
+        "line": 12,
         "column": 12
       }
     },
@@ -201,7 +220,7 @@
         "column": 2
       },
       "end": {
-        "line": 9,
+        "line": 10,
         "column": 14
       }
     },
@@ -267,11 +286,21 @@
     },
     "uid-10": {
       "start": {
-        "line": 10,
+        "line": 9,
+        "column": 4
+      },
+      "end": {
+        "line": 9,
+        "column": 207
+      }
+    },
+    "uid-11": {
+      "start": {
+        "line": 11,
         "column": 2
       },
       "end": {
-        "line": 10,
+        "line": 11,
         "column": 101
       }
     }

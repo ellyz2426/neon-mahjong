@@ -142,12 +142,12 @@
             "sourceTag": "text",
             "type": "custom",
             "children": [
-              "Play Time: 0m"
+              "Win Streak: 0 (Best: 0)"
             ],
             "properties": {
               "name": "stat-9",
               "fontsize": "13",
-              "color": "#ffffff"
+              "color": "#ffaa00"
             },
             "dataUid": "uid-13"
           },
@@ -331,7 +331,7 @@
       },
       "end": {
         "line": 12,
-        "column": 74
+        "column": 84
       }
     },
     "uid-14": {

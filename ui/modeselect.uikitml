@@ -7,6 +7,7 @@
     <text name="btn-daily" fontSize="16" color="#ffaa00" textAlign="center" backgroundColor="#1a1100" padding="8" borderWidth="1" borderColor="#ffaa00" borderRadius="4">Daily - Today's puzzle</text>
     <text name="btn-speed" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="8" borderWidth="1" borderColor="#00ffff" borderRadius="4">Speed - Fast bonus</text>
     <text name="btn-practice" fontSize="16" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="8" borderWidth="1" borderColor="#00ffff" borderRadius="4">Practice - Free play</text>
+    <text name="btn-challenge" fontSize="16" color="#ff4466" textAlign="center" backgroundColor="#1a0008" padding="8" borderWidth="1" borderColor="#ff4466" borderRadius="4">Challenge - Beat objectives</text>
   </container>
   <text name="btn-mode-back" fontSize="14" color="#888888" textAlign="center" padding="6">BACK</text>
 </container>

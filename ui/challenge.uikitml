@@ -1,0 +1,15 @@
+<container name="challenge-panel" flexDirection="column" gap="6" padding="16" backgroundColor="#000a15ee" borderWidth="2" borderColor="#ff4466" borderRadius="8" width="440" alignItems="center">
+  <text fontSize="22" fontWeight="bold" color="#ff4466" textAlign="center">CHALLENGES</text>
+  <text name="ch-progress" fontSize="12" color="#ff446688" textAlign="center">0 / 8 completed</text>
+  <container flexDirection="column" gap="4" width="100%">
+    <text name="ch-0" fontSize="13" color="#ffffff" textAlign="center" backgroundColor="#1a0008" padding="6" borderWidth="1" borderColor="#ff446688" borderRadius="4">---</text>
+    <text name="ch-1" fontSize="13" color="#ffffff" textAlign="center" backgroundColor="#1a0008" padding="6" borderWidth="1" borderColor="#ff446688" borderRadius="4">---</text>
+    <text name="ch-2" fontSize="13" color="#ffffff" textAlign="center" backgroundColor="#1a0008" padding="6" borderWidth="1" borderColor="#ff446688" borderRadius="4">---</text>
+    <text name="ch-3" fontSize="13" color="#ffffff" textAlign="center" backgroundColor="#1a0008" padding="6" borderWidth="1" borderColor="#ff446688" borderRadius="4">---</text>
+    <text name="ch-4" fontSize="13" color="#ffffff" textAlign="center" backgroundColor="#1a0008" padding="6" borderWidth="1" borderColor="#ff446688" borderRadius="4">---</text>
+    <text name="ch-5" fontSize="13" color="#ffffff" textAlign="center" backgroundColor="#1a0008" padding="6" borderWidth="1" borderColor="#ff446688" borderRadius="4">---</text>
+    <text name="ch-6" fontSize="13" color="#ffffff" textAlign="center" backgroundColor="#1a0008" padding="6" borderWidth="1" borderColor="#ff446688" borderRadius="4">---</text>
+    <text name="ch-7" fontSize="13" color="#ffffff" textAlign="center" backgroundColor="#1a0008" padding="6" borderWidth="1" borderColor="#ff446688" borderRadius="4">---</text>
+  </container>
+  <text name="btn-ch-back" fontSize="14" color="#888888" textAlign="center" padding="4">BACK</text>
+</container>
