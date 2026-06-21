@@ -488,6 +488,171 @@ export interface LayoutDef {
   generate: () => TilePosition[];
 }
 
+// ── NEW LAYOUT: Dragon ──────────────────────────────────────
+function makeDragon(): TilePosition[] {
+  const pos: TilePosition[] = [];
+  // Layer 0: serpentine body (S-curve)
+  // Top curve (head)
+  for (let c = 4; c <= 10; c++) pos.push({ col: c, row: 0, layer: 0 });
+  for (let c = 3; c <= 4; c++) pos.push({ col: c, row: 1, layer: 0 });
+  for (let c = 9; c <= 11; c++) pos.push({ col: c, row: 1, layer: 0 });
+  // Head horn
+  pos.push({ col: 11, row: 0, layer: 0 });
+  pos.push({ col: 12, row: 0, layer: 0 });
+
+  // Upper body
+  for (let c = 1; c <= 4; c++) pos.push({ col: c, row: 2, layer: 0 });
+  for (let c = 0; c <= 2; c++) pos.push({ col: c, row: 3, layer: 0 });
+  for (let c = 0; c <= 3; c++) pos.push({ col: c, row: 4, layer: 0 });
+
+  // Mid curve
+  for (let c = 2; c <= 8; c++) pos.push({ col: c, row: 5, layer: 0 });
+  for (let c = 7; c <= 10; c++) pos.push({ col: c, row: 6, layer: 0 });
+  for (let c = 8; c <= 11; c++) pos.push({ col: c, row: 7, layer: 0 });
+
+  // Lower body
+  for (let c = 7; c <= 11; c++) pos.push({ col: c, row: 8, layer: 0 });
+  for (let c = 4; c <= 8; c++) pos.push({ col: c, row: 9, layer: 0 });
+
+  // Tail
+  for (let c = 1; c <= 4; c++) pos.push({ col: c, row: 10, layer: 0 });
+  pos.push({ col: 0, row: 10, layer: 0 });
+  pos.push({ col: 0, row: 11, layer: 0 });
+
+  // Layer 1: spine along body center
+  for (let c = 5; c <= 9; c++) pos.push({ col: c, row: 0, layer: 1 });
+  pos.push({ col: 3, row: 2, layer: 1 }); pos.push({ col: 4, row: 2, layer: 1 });
+  pos.push({ col: 1, row: 3, layer: 1 }); pos.push({ col: 2, row: 3, layer: 1 });
+  pos.push({ col: 1, row: 4, layer: 1 }); pos.push({ col: 2, row: 4, layer: 1 });
+  for (let c = 3; c <= 7; c++) pos.push({ col: c, row: 5, layer: 1 });
+  pos.push({ col: 8, row: 6, layer: 1 }); pos.push({ col: 9, row: 6, layer: 1 });
+  pos.push({ col: 9, row: 7, layer: 1 }); pos.push({ col: 10, row: 7, layer: 1 });
+  pos.push({ col: 8, row: 8, layer: 1 }); pos.push({ col: 9, row: 8, layer: 1 });
+  pos.push({ col: 5, row: 9, layer: 1 }); pos.push({ col: 6, row: 9, layer: 1 });
+
+  // Layer 2: central jewels
+  pos.push({ col: 7, row: 0, layer: 2 });
+  pos.push({ col: 5, row: 5, layer: 2 }); pos.push({ col: 6, row: 5, layer: 2 });
+  pos.push({ col: 9, row: 7, layer: 2 });
+
+  // Pad to 144
+  const extras: [number,number][] = [
+    [5,1],[6,1],[7,1],[8,1],
+    [5,2],[6,2],[7,2],[8,2],
+    [3,3],[4,3],[5,3],
+    [3,4],[4,4],[5,4],
+    [9,4],[10,4],
+    [9,5],[10,5],
+    [3,6],[4,6],[5,6],[6,6],
+    [3,7],[4,7],[5,7],[6,7],[7,7],
+    [3,8],[4,8],[5,8],[6,8],
+    [2,9],[3,9],[7,9],[8,9],
+    [5,10],[6,10],[7,10],
+    [1,11],[2,11],[3,11],
+  ];
+  for (const [c, r] of extras) {
+    const key = `${c},${r},0`;
+    const exists = pos.some(p => p.col === c && p.row === r && p.layer === 0);
+    if (!exists && pos.length < 144) pos.push({ col: c, row: r, layer: 0 });
+  }
+  return pos.slice(0, 144);
+}
+
+// ── NEW LAYOUT: Phoenix ─────────────────────────────────────
+function makePhoenix(): TilePosition[] {
+  const pos: TilePosition[] = [];
+  // Layer 0: bird shape — outspread wings + body
+
+  // Left wing (rows 2-6, spreading left)
+  for (let r = 2; r <= 6; r++) {
+    const wingSpan = 5 - Math.abs(r - 4);
+    for (let c = 5 - wingSpan; c <= 5; c++) {
+      pos.push({ col: c, row: r, layer: 0 });
+    }
+  }
+  // Right wing (mirrored)
+  for (let r = 2; r <= 6; r++) {
+    const wingSpan = 5 - Math.abs(r - 4);
+    for (let c = 7; c <= 7 + wingSpan; c++) {
+      pos.push({ col: c, row: r, layer: 0 });
+    }
+  }
+  // Body center spine
+  for (let r = 0; r < 10; r++) {
+    pos.push({ col: 6, row: r, layer: 0 });
+  }
+  // Head
+  pos.push({ col: 5, row: 0, layer: 0 });
+  pos.push({ col: 7, row: 0, layer: 0 });
+  pos.push({ col: 5, row: 1, layer: 0 });
+  pos.push({ col: 7, row: 1, layer: 0 });
+  // Tail fan
+  for (let c = 3; c <= 9; c++) {
+    if (c !== 6) pos.push({ col: c, row: 8, layer: 0 });
+  }
+  for (let c = 2; c <= 10; c++) {
+    if (c !== 6) pos.push({ col: c, row: 9, layer: 0 });
+  }
+  // Tail tips
+  pos.push({ col: 1, row: 10, layer: 0 }); pos.push({ col: 3, row: 10, layer: 0 });
+  pos.push({ col: 5, row: 10, layer: 0 }); pos.push({ col: 7, row: 10, layer: 0 });
+  pos.push({ col: 9, row: 10, layer: 0 }); pos.push({ col: 11, row: 10, layer: 0 });
+
+  // Deduplicate
+  const seen = new Set<string>();
+  const unique: TilePosition[] = [];
+  for (const p of pos) {
+    const k = `${p.col},${p.row},${p.layer}`;
+    if (!seen.has(k)) { seen.add(k); unique.push(p); }
+  }
+
+  // Layer 1: body + wing inner
+  for (let r = 1; r <= 7; r++) {
+    unique.push({ col: 6, row: r, layer: 1 });
+  }
+  for (let r = 3; r <= 5; r++) {
+    unique.push({ col: 4, row: r, layer: 1 });
+    unique.push({ col: 5, row: r, layer: 1 });
+    unique.push({ col: 7, row: r, layer: 1 });
+    unique.push({ col: 8, row: r, layer: 1 });
+  }
+
+  // Layer 2: core
+  for (let r = 3; r <= 5; r++) {
+    unique.push({ col: 5, row: r, layer: 2 });
+    unique.push({ col: 6, row: r, layer: 2 });
+    unique.push({ col: 7, row: r, layer: 2 });
+  }
+
+  // Layer 3: heart
+  unique.push({ col: 6, row: 3, layer: 3 });
+  unique.push({ col: 6, row: 4, layer: 3 });
+  unique.push({ col: 6, row: 5, layer: 3 });
+  unique.push({ col: 5, row: 4, layer: 3 });
+  unique.push({ col: 7, row: 4, layer: 3 });
+
+  // Layer 4: crown
+  unique.push({ col: 6, row: 4, layer: 4 });
+
+  // Wing tip extras to reach 144
+  const wingExtras: [number,number][] = [
+    [0,3],[0,4],[0,5],[12,3],[12,4],[12,5],
+    [1,2],[1,6],[11,2],[11,6],
+    [2,1],[10,1],[2,7],[10,7],
+    [4,8],[8,8],[4,9],[8,9],
+    [6,10],[6,11],
+  ];
+  for (const [c,r] of wingExtras) {
+    const k = `${c},${r},0`;
+    if (!seen.has(k) && unique.length < 144) {
+      seen.add(k);
+      unique.push({ col: c, row: r, layer: 0 });
+    }
+  }
+
+  return unique.slice(0, 144);
+}
+
 export const LAYOUTS: LayoutDef[] = [
   { name: 'Fortress', description: '6 layers', generate: makeFortress },
   { name: 'Pyramid', description: 'Wide base', generate: makePyramid },
@@ -497,6 +662,8 @@ export const LAYOUTS: LayoutDef[] = [
   { name: 'Spiral', description: 'Layered ring', generate: makeSpiral },
   { name: 'Butterfly', description: 'Twin wings', generate: makeButterfly },
   { name: 'Turtle', description: 'Shell stack', generate: makeTurtle },
+  { name: 'Dragon', description: 'Serpentine', generate: makeDragon },
+  { name: 'Phoenix', description: 'Soaring bird', generate: makePhoenix },
 ];
 
 // ── Game Modes ──────────────────────────────────────────────
@@ -720,6 +887,109 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'match3_fast', name: 'Triple Tap', desc: '3 matches in 5 seconds' },
   { id: 'powerup3_game', name: 'Power Surge', desc: 'Use 3 power-ups in one game' },
   { id: 'combo_master_classic', name: 'Combo Purist', desc: 'x10 combo in Classic mode' },
+  // Layout achievements: Dragon, Phoenix
+  { id: 'dragon_win', name: 'Dragon Slayer', desc: 'Win on Dragon' },
+  { id: 'phoenix_win', name: 'Phoenix Rising', desc: 'Win on Phoenix' },
+  { id: 'all10_layouts', name: 'World Traveler', desc: 'Win on all 10 layouts' },
+  // Tile skin achievements
+  { id: 'skin_circuit', name: 'Wired Up', desc: 'Play with Circuit skin' },
+  { id: 'skin_jade', name: 'Carved in Stone', desc: 'Play with Jade skin' },
+  { id: 'all_skins', name: 'Fashionista Pro', desc: 'Try all tile skins' },
+  // Combo announcer milestones
+  { id: 'combo_great', name: 'Great Show', desc: 'Trigger a Great! combo' },
+  { id: 'combo_legendary', name: 'Legend Status', desc: 'Trigger LEGENDARY! combo' },
+  { id: 'combo_godlike', name: 'Ascended', desc: 'Trigger GODLIKE! combo' },
+  // Volume milestone
+  { id: 'matches200_game', name: 'Match Machine', desc: 'Match 200+ total' },
+];
+
+// ── Tile Skin Patterns ──────────────────────────────────────
+export type TileSkin = 'default' | 'circuit' | 'jade';
+
+export interface TileSkinDef {
+  id: TileSkin;
+  name: string;
+  description: string;
+  drawPattern: (ctx: CanvasRenderingContext2D, w: number, h: number, color: string) => void;
+}
+
+export const TILE_SKINS: TileSkinDef[] = [
+  {
+    id: 'default', name: 'Classic', description: 'Clean neon borders',
+    drawPattern: (_ctx, _w, _h, _color) => {
+      // Default: just border, done in the main texture fn
+    },
+  },
+  {
+    id: 'circuit', name: 'Circuit', description: 'PCB trace pattern',
+    drawPattern: (ctx, w, h, color) => {
+      ctx.strokeStyle = color + '33';
+      ctx.lineWidth = 1;
+      // Horizontal traces
+      for (let y = 20; y < h; y += 18) {
+        ctx.beginPath();
+        ctx.moveTo(8, y);
+        const midX = 30 + (y % 36 === 0 ? 20 : 0);
+        ctx.lineTo(midX, y);
+        ctx.lineTo(midX, y - 8);
+        ctx.lineTo(midX + 15, y - 8);
+        ctx.stroke();
+      }
+      // Vertical traces
+      for (let x = 90; x < w; x += 22) {
+        ctx.beginPath();
+        ctx.moveTo(x, h - 8);
+        ctx.lineTo(x, h - 35);
+        ctx.lineTo(x + 10, h - 45);
+        ctx.stroke();
+      }
+      // Nodes (small circles)
+      ctx.fillStyle = color + '44';
+      const nodes: [number,number][] = [[20,30],[100,20],[40,100],[90,90],[110,60]];
+      for (const [nx,ny] of nodes) {
+        ctx.beginPath();
+        ctx.arc(nx, ny, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    },
+  },
+  {
+    id: 'jade', name: 'Jade Stone', description: 'Carved stone look',
+    drawPattern: (ctx, w, h, color) => {
+      // Inner frame (carved border effect)
+      ctx.strokeStyle = color + '22';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(10, 10, w - 20, h - 20);
+      ctx.strokeRect(14, 14, w - 28, h - 28);
+      // Corner ornaments
+      const corners: [number,number,number][] = [[12,12,1],[w-12,12,1],[12,h-12,1],[w-12,h-12,1]];
+      ctx.fillStyle = color + '33';
+      for (const [cx,cy,s] of corners) {
+        ctx.fillRect(cx - 3*s, cy - 3*s, 6*s, 6*s);
+      }
+      // Subtle texture dots
+      ctx.fillStyle = color + '11';
+      for (let i = 0; i < 20; i++) {
+        const dx = 20 + (i * 37) % (w - 40);
+        const dy = 30 + (i * 53) % (h - 60);
+        ctx.beginPath();
+        ctx.arc(dx, dy, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    },
+  },
+];
+
+// ── Combo Announcer Labels ──────────────────────────────────
+export const COMBO_LABELS: { minCombo: number; label: string; color: string }[] = [
+  { minCombo: 3, label: 'Nice!', color: '#00ccff' },
+  { minCombo: 4, label: 'Great!', color: '#00ff88' },
+  { minCombo: 5, label: 'Awesome!', color: '#ffaa00' },
+  { minCombo: 6, label: 'Amazing!', color: '#ff4466' },
+  { minCombo: 7, label: 'Incredible!', color: '#ff44ff' },
+  { minCombo: 8, label: 'LEGENDARY!', color: '#ffcc00' },
+  { minCombo: 9, label: 'GODLIKE!', color: '#ff2222' },
+  { minCombo: 10, label: 'UNSTOPPABLE!', color: '#ffffff' },
 ];
 
 // ── Power-ups ───────────────────────────────────────────────

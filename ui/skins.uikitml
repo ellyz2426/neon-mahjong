@@ -1,11 +1,20 @@
-<container name="skins-panel" flexDirection="column" gap="8" padding="16" backgroundColor="#000a15ee" borderWidth="2" borderColor="#ffaa00" borderRadius="8" width="400" alignItems="center">
-  <text fontSize="22" fontWeight="bold" color="#ffaa00" textAlign="center">TILE THEMES</text>
-  <container flexDirection="column" gap="6" width="100%">
-    <text name="btn-skin-0" fontSize="15" color="#00ffff" textAlign="center" backgroundColor="#001a1a" padding="8" borderWidth="1" borderColor="#00ffff" borderRadius="4">Neon [EQUIPPED]</text>
-    <text name="btn-skin-1" fontSize="15" color="#8888ff" textAlign="center" backgroundColor="#000022" padding="8" borderWidth="1" borderColor="#4444aa" borderRadius="4">Hologram</text>
-    <text name="btn-skin-2" fontSize="15" color="#ffffff" textAlign="center" backgroundColor="#111111" padding="8" borderWidth="1" borderColor="#666666" borderRadius="4">Monochrome</text>
-    <text name="btn-skin-3" fontSize="15" color="#ff44ff" textAlign="center" backgroundColor="#1a001a" padding="8" borderWidth="1" borderColor="#aa44aa" borderRadius="4">Plasma</text>
-    <text name="btn-skin-4" fontSize="15" color="#ffaa00" textAlign="center" backgroundColor="#1a1100" padding="8" borderWidth="1" borderColor="#aa6600" borderRadius="4">Solar</text>
+<container name="skins-panel" flexDirection="column" gap="6" padding="14" backgroundColor="#000a15ee" borderWidth="2" borderColor="#ffaa00" borderRadius="8" width="420" alignItems="center">
+  <text fontSize="20" fontWeight="bold" color="#ffaa00" textAlign="center">TILE THEMES</text>
+  <container flexDirection="column" gap="4" width="100%">
+    <text name="btn-skin-0" fontSize="14" color="#00ffff" textAlign="center" backgroundColor="#001a1a" padding="6" borderWidth="1" borderColor="#00ffff" borderRadius="4">Neon [EQUIPPED]</text>
+    <text name="btn-skin-1" fontSize="14" color="#8888ff" textAlign="center" backgroundColor="#000022" padding="6" borderWidth="1" borderColor="#4444aa" borderRadius="4">Hologram</text>
+    <text name="btn-skin-2" fontSize="14" color="#ffffff" textAlign="center" backgroundColor="#111111" padding="6" borderWidth="1" borderColor="#666666" borderRadius="4">Monochrome</text>
+    <text name="btn-skin-3" fontSize="14" color="#ff44ff" textAlign="center" backgroundColor="#1a001a" padding="6" borderWidth="1" borderColor="#aa44aa" borderRadius="4">Plasma</text>
+    <text name="btn-skin-4" fontSize="14" color="#ffaa00" textAlign="center" backgroundColor="#1a1100" padding="6" borderWidth="1" borderColor="#aa6600" borderRadius="4">Solar</text>
+    <text name="btn-skin-5" fontSize="14" color="#88ccff" textAlign="center" backgroundColor="#001020" padding="6" borderWidth="1" borderColor="#88ccff" borderRadius="4">Arctic</text>
+    <text name="btn-skin-6" fontSize="14" color="#ff4400" textAlign="center" backgroundColor="#1a0800" padding="6" borderWidth="1" borderColor="#ff4400" borderRadius="4">Ember</text>
+    <text name="btn-skin-7" fontSize="14" color="#22cc44" textAlign="center" backgroundColor="#001a0a" padding="6" borderWidth="1" borderColor="#22cc44" borderRadius="4">Jade</text>
   </container>
-  <text name="btn-skins-back" fontSize="14" color="#888888" textAlign="center" padding="6">BACK</text>
+  <text fontSize="16" fontWeight="bold" color="#00ccff" textAlign="center" marginTop="6">TILE PATTERNS</text>
+  <container flexDirection="column" gap="4" width="100%">
+    <text name="btn-pat-0" fontSize="14" color="#ffffff" textAlign="center" backgroundColor="#002244" padding="6" borderWidth="1" borderColor="#00ccff" borderRadius="4">Classic [EQUIPPED]</text>
+    <text name="btn-pat-1" fontSize="14" color="#00ff88" textAlign="center" backgroundColor="#001a0a" padding="6" borderWidth="1" borderColor="#00ff88" borderRadius="4">Circuit - PCB traces</text>
+    <text name="btn-pat-2" fontSize="14" color="#88ccaa" textAlign="center" backgroundColor="#0a1a10" padding="6" borderWidth="1" borderColor="#88ccaa" borderRadius="4">Jade Stone - Carved</text>
+  </container>
+  <text name="btn-skins-back" fontSize="14" color="#888888" textAlign="center" padding="4">BACK</text>
 </container>

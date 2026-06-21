@@ -24,7 +24,7 @@ import {
   Camera,
 } from '@iwsdk/core';
 import { TileInstance, GameState } from './state';
-import { TILE_TYPES, THEMES, type ThemeDef } from './data';
+import { TILE_TYPES, THEMES, TILE_SKINS, type ThemeDef, type TileSkin } from './data';
 
 // Tile dimensions (meters)
 const TILE_W = 0.12;
@@ -35,9 +35,10 @@ const LAYER_OFFSET = TILE_D + 0.002;
 
 // ── Canvas texture generation ───────────────────────────────
 const textureCache = new Map<string, CanvasTexture>();
+let activeSkin: TileSkin = 'default';
 
 function createTileTexture(label: string, color: string, suit: string): CanvasTexture {
-  const key = `${label}|${color}|${suit}`;
+  const key = `${label}|${color}|${suit}|${activeSkin}`;
   if (textureCache.has(key)) return textureCache.get(key)!;
 
   const canvas = document.createElement('canvas');
@@ -48,6 +49,12 @@ function createTileTexture(label: string, color: string, suit: string): CanvasTe
   // Background
   ctx.fillStyle = '#0a1628';
   ctx.fillRect(0, 0, 128, 128);
+
+  // Skin pattern overlay (before border)
+  const skinDef = TILE_SKINS.find(s => s.id === activeSkin);
+  if (skinDef && activeSkin !== 'default') {
+    skinDef.drawPattern(ctx, 128, 128, color);
+  }
 
   // Border
   ctx.strokeStyle = color;
@@ -132,6 +139,11 @@ export class TileRenderer {
 
   // Match line effect
   private matchLines: { line: Line; life: number; maxLife: number }[] = [];
+
+  // Screen shake
+  private shakeIntensity = 0;
+  private shakeDuration = 0;
+  private shakeTime = 0;
 
   constructor(world: World, state: GameState) {
     this.world = world;
@@ -771,6 +783,22 @@ export class TileRenderer {
         (ml.line.material as LineBasicMaterial).opacity = alpha * 0.8;
       }
     }
+
+    // Screen shake
+    if (this.shakeDuration > 0) {
+      this.shakeTime += dt;
+      if (this.shakeTime >= this.shakeDuration) {
+        this.shakeDuration = 0;
+        this.boardGroup.position.x = 0;
+        this.boardGroup.position.z = -1.5;
+      } else {
+        const decay = 1 - this.shakeTime / this.shakeDuration;
+        const shakeX = (Math.random() - 0.5) * this.shakeIntensity * decay;
+        const shakeZ = (Math.random() - 0.5) * this.shakeIntensity * decay;
+        this.boardGroup.position.x = shakeX;
+        this.boardGroup.position.z = -1.5 + shakeZ;
+      }
+    }
   }
 
   // ── Zoom control ──────────────────────────────────────────
@@ -784,6 +812,26 @@ export class TileRenderer {
 
   resetZoom(): void {
     this.targetZoom = 1.0;
+  }
+
+  // ── Tile Skin ──────────────────────────────────────────────
+  setSkin(skin: TileSkin): void {
+    activeSkin = skin;
+    textureCache.clear();
+    if (this.state.board) {
+      this.buildBoard(false);
+    }
+  }
+
+  getSkin(): TileSkin {
+    return activeSkin;
+  }
+
+  // ── Screen Shake ──────────────────────────────────────────
+  triggerShake(intensity: number, duration: number): void {
+    this.shakeIntensity = intensity;
+    this.shakeDuration = duration;
+    this.shakeTime = 0;
   }
 
   // ── Cleanup ───────────────────────────────────────────────

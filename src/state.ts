@@ -5,7 +5,7 @@ import {
   type GameMode, GAME_MODES, LAYOUTS, ACHIEVEMENTS, CHALLENGES,
   type ThemeDef, THEMES, generateTileSet, type ChallengeDef,
   type Difficulty, DIFFICULTIES, calculateGrade, type GradeResult,
-  type PowerUpType, POWERUPS,
+  type PowerUpType, POWERUPS, type TileSkin, TILE_SKINS,
 } from './data';
 
 // ── Tile Instance ───────────────────────────────────────────
@@ -47,6 +47,7 @@ export interface PlayerStats {
   perLayoutStats: Map<string, { played: number; won: number }>;
   powerupsUsed: Set<string>;
   totalPowerupsUsed: number;
+  skinsUsed: Set<string>;
 }
 
 // ── Board State ─────────────────────────────────────────────
@@ -153,6 +154,7 @@ export class GameState {
           perLayoutStats: new Map(Object.entries(d.perLayoutStats || {})),
           powerupsUsed: new Set(d.powerupsUsed || []),
           totalPowerupsUsed: d.totalPowerupsUsed || 0,
+          skinsUsed: new Set(d.skinsUsed || []),
         };
       }
     } catch { /* ignore */ }
@@ -169,6 +171,7 @@ export class GameState {
       perLayoutStats: new Map(),
       powerupsUsed: new Set(),
       totalPowerupsUsed: 0,
+      skinsUsed: new Set(['default']),
     };
   }
 
@@ -184,6 +187,7 @@ export class GameState {
         perModeStats: Object.fromEntries(this.stats.perModeStats),
         perLayoutStats: Object.fromEntries(this.stats.perLayoutStats),
         powerupsUsed: [...this.stats.powerupsUsed],
+        skinsUsed: [...this.stats.skinsUsed],
       };
       localStorage.setItem('neon-mahjong-stats', JSON.stringify(d));
     } catch { /* ignore */ }
@@ -689,8 +693,11 @@ export class GameState {
     this.checkAchievement('spiral_win', this.stats.layoutWins.has('spiral'));
     this.checkAchievement('butterfly_win', this.stats.layoutWins.has('butterfly'));
     this.checkAchievement('turtle_win', this.stats.layoutWins.has('turtle'));
+    this.checkAchievement('dragon_win', this.stats.layoutWins.has('dragon'));
+    this.checkAchievement('phoenix_win', this.stats.layoutWins.has('phoenix'));
     this.checkAchievement('all_layouts', this.stats.layoutWins.size >= LAYOUTS.length);
     this.checkAchievement('all8_layouts', this.stats.layoutWins.size >= 8);
+    this.checkAchievement('all10_layouts', this.stats.layoutWins.size >= 10);
 
     // All modes achievement
     const allModes: GameMode[] = ['classic', 'timed', 'zen', 'daily', 'speed', 'practice', 'challenge'];
@@ -1064,6 +1071,24 @@ export class GameState {
   // ── Quick Play ────────────────────────────────────────────
   trackQuickPlay(): void {
     this.checkAchievement('quick_play', true);
+    this.saveStats();
+  }
+
+  // ── Tile Skins ────────────────────────────────────────────
+  trackSkin(skin: TileSkin): void {
+    this.stats.skinsUsed.add(skin);
+    if (skin === 'circuit') this.checkAchievement('skin_circuit', true);
+    if (skin === 'jade') this.checkAchievement('skin_jade', true);
+    this.checkAchievement('all_skins', this.stats.skinsUsed.size >= TILE_SKINS.length);
+    this.saveStats();
+  }
+
+  // ── Combo Labels ──────────────────────────────────────────
+  trackComboLabel(combo: number): void {
+    this.checkAchievement('combo_great', combo >= 4);
+    this.checkAchievement('combo_legendary', combo >= 8);
+    this.checkAchievement('combo_godlike', combo >= 9);
+    this.checkAchievement('matches200_game', this.stats.totalMatches >= 200);
     this.saveStats();
   }
 

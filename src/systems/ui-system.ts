@@ -16,7 +16,7 @@ import { TileRenderer } from '../renderer';
 import {
   TILE_TYPES, THEMES, LAYOUTS, GAME_MODES,
   ACHIEVEMENTS, CHALLENGES, DIFFICULTIES, type GameMode, type Difficulty,
-  calculateGrade, POWERUPS, type PowerUpType,
+  calculateGrade, POWERUPS, type PowerUpType, TILE_SKINS, type TileSkin,
 } from '../data';
 
 function setText(doc: UIKitDocument | undefined | null, id: string, text: string): void {
@@ -359,6 +359,7 @@ export class UISystem extends createSystem({
       ['btn-fortress', 0], ['btn-pyramid', 1], ['btn-tower', 2],
       ['btn-cross', 3], ['btn-diamond', 4], ['btn-spiral', 5],
       ['btn-butterfly', 6], ['btn-turtle', 7],
+      ['btn-dragon', 8], ['btn-phoenix', 9],
     ];
     for (const [btn, idx] of layouts) {
       this.addClick(doc, btn, () => {
@@ -540,6 +541,14 @@ export class UISystem extends createSystem({
         this._state.currentThemeIdx = i;
         this._tileRenderer.applyTheme(i);
         this._state.trackTheme(THEMES[i].id);
+        this.updateSkins();
+      });
+    }
+    // Tile pattern buttons
+    for (let i = 0; i < TILE_SKINS.length; i++) {
+      this.addClick(doc, `btn-pat-${i}`, () => {
+        this._audio.playClick();
+        this._gameSystem.setSkin(TILE_SKINS[i].id);
         this.updateSkins();
       });
     }
@@ -831,6 +840,13 @@ export class UISystem extends createSystem({
       const equipped = i === this._state.currentThemeIdx;
       setText(this.skinsDoc, `btn-skin-${i}`,
         `${THEMES[i].name}${equipped ? ' [EQUIPPED]' : ''}`);
+    }
+    // Tile patterns
+    const currentSkin = this._gameSystem.getSkin();
+    for (let i = 0; i < TILE_SKINS.length; i++) {
+      const equipped = TILE_SKINS[i].id === currentSkin;
+      setText(this.skinsDoc, `btn-pat-${i}`,
+        `${TILE_SKINS[i].name}${equipped ? ' [EQUIPPED]' : ''} - ${TILE_SKINS[i].description}`);
     }
   }
 

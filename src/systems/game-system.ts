@@ -10,7 +10,7 @@ import { TileRenderer } from '../renderer';
 import { AudioManager } from '../audio';
 import { ParticleSystem } from '../particles';
 import { ScorePopupSystem } from '../score-popup';
-import { LAYOUTS, GAME_MODES, CHALLENGES, type GameMode, type ChallengeDef, type Difficulty, POWERUPS, type PowerUpType } from '../data';
+import { LAYOUTS, GAME_MODES, CHALLENGES, type GameMode, type ChallengeDef, type Difficulty, POWERUPS, type PowerUpType, COMBO_LABELS, type TileSkin } from '../data';
 
 export type GameScreen = 'title' | 'modeselect' | 'layoutselect' | 'countdown'
   | 'playing' | 'pause' | 'gameover' | 'achievements' | 'stats'
@@ -104,6 +104,22 @@ export class GameSystem extends createSystem({}) {
       // Combo particle burst at board center
       const center = new Vector3(0, 1.2, -1.5);
       this._particles.emitCombo(center, combo);
+
+      // Combo announcer — find matching label
+      const labelDef = COMBO_LABELS.slice().reverse().find(l => combo >= l.minCombo);
+      if (labelDef) {
+        const pos = new Vector3(0, 1.5, -1.5);
+        this._scorePopups.show(pos.x, pos.y, pos.z, labelDef.label, labelDef.color);
+      }
+
+      // Screen shake on big combos
+      if (combo >= 5) {
+        const intensity = Math.min(0.02 + (combo - 5) * 0.005, 0.06);
+        this._renderer.triggerShake(intensity, 0.3);
+      }
+
+      // Track combo achievements
+      this._state.trackComboLabel(combo);
     };
     this._state.onShuffle = () => {
       this._renderer.refreshAllTiles();
@@ -373,6 +389,16 @@ export class GameSystem extends createSystem({}) {
     this._state.currentDifficulty = 'normal';
     this._state.trackQuickPlay();
     this.beginCountdown();
+  }
+
+  // ── Tile Skins ────────────────────────────────────────────
+  setSkin(skin: TileSkin): void {
+    this._renderer.setSkin(skin);
+    this._state.trackSkin(skin);
+  }
+
+  getSkin(): TileSkin {
+    return this._renderer.getSkin();
   }
 
   // ── Input ─────────────────────────────────────────────────

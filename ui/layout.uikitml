@@ -1,15 +1,17 @@
-<container name="layout-panel" flexDirection="column" gap="6" padding="16" backgroundColor="#000a15ee" borderWidth="2" borderColor="#00ffff" borderRadius="8" width="420" alignItems="center">
+<container name="layout-panel" flexDirection="column" gap="5" padding="14" backgroundColor="#000a15ee" borderWidth="2" borderColor="#00ffff" borderRadius="8" width="420" alignItems="center">
   <text fontSize="22" fontWeight="bold" color="#00ffff" textAlign="center">SELECT LAYOUT</text>
   <text name="diff-label" fontSize="12" color="#00ffff88" textAlign="center">Normal</text>
-  <container flexDirection="column" gap="5" width="100%">
-    <text name="btn-fortress" fontSize="15" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="7" borderWidth="1" borderColor="#00ffff" borderRadius="4">Fortress - 6 layers</text>
-    <text name="btn-pyramid" fontSize="15" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="7" borderWidth="1" borderColor="#00ffff" borderRadius="4">Pyramid - Wide base</text>
-    <text name="btn-tower" fontSize="15" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="7" borderWidth="1" borderColor="#00ffff" borderRadius="4">Tower - Deep stack</text>
-    <text name="btn-cross" fontSize="15" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="7" borderWidth="1" borderColor="#00ffff" borderRadius="4">Cross - Wide spread</text>
-    <text name="btn-diamond" fontSize="15" color="#ff88ff" textAlign="center" backgroundColor="#1a0028" padding="7" borderWidth="1" borderColor="#ff88ff" borderRadius="4">Diamond - Concentric</text>
-    <text name="btn-spiral" fontSize="15" color="#00ff88" textAlign="center" backgroundColor="#001a0a" padding="7" borderWidth="1" borderColor="#00ff88" borderRadius="4">Spiral - Layered ring</text>
-    <text name="btn-butterfly" fontSize="15" color="#ffaa00" textAlign="center" backgroundColor="#1a1100" padding="7" borderWidth="1" borderColor="#ffaa00" borderRadius="4">Butterfly - Twin wings</text>
-    <text name="btn-turtle" fontSize="15" color="#88ccff" textAlign="center" backgroundColor="#001528" padding="7" borderWidth="1" borderColor="#88ccff" borderRadius="4">Turtle - Shell stack</text>
+  <container flexDirection="column" gap="4" width="100%">
+    <text name="btn-fortress" fontSize="14" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="6" borderWidth="1" borderColor="#00ffff" borderRadius="4">Fortress - 6 layers</text>
+    <text name="btn-pyramid" fontSize="14" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="6" borderWidth="1" borderColor="#00ffff" borderRadius="4">Pyramid - Wide base</text>
+    <text name="btn-tower" fontSize="14" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="6" borderWidth="1" borderColor="#00ffff" borderRadius="4">Tower - Deep stack</text>
+    <text name="btn-cross" fontSize="14" color="#ffffff" textAlign="center" backgroundColor="#003333" padding="6" borderWidth="1" borderColor="#00ffff" borderRadius="4">Cross - Wide spread</text>
+    <text name="btn-diamond" fontSize="14" color="#ff88ff" textAlign="center" backgroundColor="#1a0028" padding="6" borderWidth="1" borderColor="#ff88ff" borderRadius="4">Diamond - Concentric</text>
+    <text name="btn-spiral" fontSize="14" color="#00ff88" textAlign="center" backgroundColor="#001a0a" padding="6" borderWidth="1" borderColor="#00ff88" borderRadius="4">Spiral - Layered ring</text>
+    <text name="btn-butterfly" fontSize="14" color="#ffaa00" textAlign="center" backgroundColor="#1a1100" padding="6" borderWidth="1" borderColor="#ffaa00" borderRadius="4">Butterfly - Twin wings</text>
+    <text name="btn-turtle" fontSize="14" color="#88ccff" textAlign="center" backgroundColor="#001528" padding="6" borderWidth="1" borderColor="#88ccff" borderRadius="4">Turtle - Shell stack</text>
+    <text name="btn-dragon" fontSize="14" color="#ff4444" textAlign="center" backgroundColor="#1a0000" padding="6" borderWidth="1" borderColor="#ff4444" borderRadius="4">Dragon - Serpentine</text>
+    <text name="btn-phoenix" fontSize="14" color="#ff8800" textAlign="center" backgroundColor="#1a0a00" padding="6" borderWidth="1" borderColor="#ff8800" borderRadius="4">Phoenix - Soaring bird</text>
   </container>
   <text name="btn-layout-back" fontSize="14" color="#888888" textAlign="center" padding="4">BACK</text>
 </container>
