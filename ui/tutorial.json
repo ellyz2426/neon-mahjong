@@ -1,0 +1,241 @@
+{
+  "element": {
+    "sourceTag": "container",
+    "type": "custom",
+    "children": [
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "WELCOME TO NEON MAHJONG"
+        ],
+        "properties": {
+          "fontsize": "22",
+          "fontweight": "bold",
+          "color": "#00ff88",
+          "textalign": "center"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "container",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Match pairs of identical tiles to clear the board."
+            ],
+            "properties": {
+              "fontsize": "13",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-4"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "A tile is FREE when nothing is on top and at least one side (left or right) is open."
+            ],
+            "properties": {
+              "fontsize": "13",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-5"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Click a free tile to select it, then click another matching free tile to clear both."
+            ],
+            "properties": {
+              "fontsize": "13",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-6"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Use HINT to highlight a valid pair, SHUFFLE to rearrange tiles."
+            ],
+            "properties": {
+              "fontsize": "13",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-7"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Fast consecutive matches build combo multiplier for bonus points!"
+            ],
+            "properties": {
+              "fontsize": "13",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-8"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Tip: Clear tiles from the edges and top layers first to free more tiles below."
+            ],
+            "properties": {
+              "fontsize": "13",
+              "color": "#ffaa00"
+            },
+            "dataUid": "uid-9"
+          }
+        ],
+        "properties": {
+          "flexdirection": "column",
+          "gap": "4",
+          "width": "100%"
+        },
+        "dataUid": "uid-3"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "GOT IT!"
+        ],
+        "properties": {
+          "name": "btn-tut-ok",
+          "fontsize": "18",
+          "color": "#ffffff",
+          "textalign": "center",
+          "backgroundcolor": "#003322",
+          "padding": "10",
+          "borderwidth": "1",
+          "bordercolor": "#00ff88",
+          "borderradius": "4"
+        },
+        "dataUid": "uid-10"
+      }
+    ],
+    "properties": {
+      "name": "tut-panel",
+      "flexdirection": "column",
+      "gap": "8",
+      "padding": "20",
+      "backgroundcolor": "#000a15ee",
+      "borderwidth": "2",
+      "bordercolor": "#00ff88",
+      "borderradius": "8",
+      "width": "420",
+      "alignitems": "center"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {},
+  "ranges": {
+    "uid-1": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 11,
+        "column": 12
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 105
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 2,
+        "column": 2
+      },
+      "end": {
+        "line": 9,
+        "column": 14
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 3,
+        "column": 4
+      },
+      "end": {
+        "line": 3,
+        "column": 97
+      }
+    },
+    "uid-5": {
+      "start": {
+        "line": 4,
+        "column": 4
+      },
+      "end": {
+        "line": 4,
+        "column": 131
+      }
+    },
+    "uid-6": {
+      "start": {
+        "line": 5,
+        "column": 4
+      },
+      "end": {
+        "line": 5,
+        "column": 131
+      }
+    },
+    "uid-7": {
+      "start": {
+        "line": 6,
+        "column": 4
+      },
+      "end": {
+        "line": 6,
+        "column": 110
+      }
+    },
+    "uid-8": {
+      "start": {
+        "line": 7,
+        "column": 4
+      },
+      "end": {
+        "line": 7,
+        "column": 112
+      }
+    },
+    "uid-9": {
+      "start": {
+        "line": 8,
+        "column": 4
+      },
+      "end": {
+        "line": 8,
+        "column": 125
+      }
+    },
+    "uid-10": {
+      "start": {
+        "line": 10,
+        "column": 2
+      },
+      "end": {
+        "line": 10,
+        "column": 183
+      }
+    }
+  }
+}
